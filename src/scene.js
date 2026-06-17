@@ -1,18 +1,19 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { BeveledDiceGeometry } from './dice-geometry.js';
-import { createDiceShaderMaterial } from './dice-shaders.js';
+import { createDiceFaceMaterials } from './dice-faces.js';
 import { ThrowTrail, Shockwave } from './effects.js';
 
-// ===== Dice variety — matches game's 7 types =====
+// ===== Dice variety — classic face textures (white-ish body + colored pips) =====
+// Matches the game's canvas-rendered dice look
 const DICE_STYLES = [
-    { body: 0x12121e, dot: 0xffd700, emissive: 0xff8c00, name: 'golden', shader: 'golden' },
-    { body: 0x1a0a20, dot: 0xff4444, emissive: 0xff2200, name: 'fire', shader: 'fire' },
-    { body: 0x0a1a2e, dot: 0x44aaff, emissive: 0x2288ff, name: 'ice', shader: 'ice' },
-    { body: 0x0a1e12, dot: 0x44ff88, emissive: 0x22cc66, name: 'nature', shader: null },
-    { body: 0x1a0a2e, dot: 0xcc66ff, emissive: 0xaa44ff, name: 'arcane', shader: 'arcane' },
-    { body: 0x1e1a0a, dot: 0xffaa33, emissive: 0xff7700, name: 'amber', shader: null },
-    { body: 0x1e1e1e, dot: 0xffffff, emissive: 0xcccccc, name: 'star', shader: 'star' },
+    { body: '#f4f4ee', dot: 'normal',  emissive: 0xffe0a0, name: 'classic' },  // 经典白底黑点
+    { body: '#fff8e8', dot: 'golden',  emissive: 0xffcc44, name: 'golden' },   // 暖白金点
+    { body: '#1a1018', dot: 'fire',    emissive: 0xff5522, name: 'fire' },     // 暗体火点
+    { body: '#eef6ff', dot: 'ice',     emissive: 0x66bbff, name: 'ice' },      // 冰白蓝点
+    { body: '#f0eafc', dot: 'arcane',  emissive: 0xaa66ff, name: 'arcane' },   // 淡紫奥术
+    { body: '#fef0e0', dot: 'crystal', emissive: 0x66ddff, name: 'crystal' },  // 水晶
+    { body: '#1a1a1e', dot: 'golden',  emissive: 0xffd700, name: 'obsidian' }, // 黑曜金点
 ];
 
 export function initScene(canvas, state) {
@@ -117,85 +118,33 @@ function setupLighting(scene) {
 
 function createSingleDice(size, style, envMap, useBeveled = false) {
     // Use BeveledDiceGeometry for hero, RoundedBox for smaller dice
+    // Both have 6 material groups (one per face) for the face-texture material array
     const geometry = useBeveled
         ? new BeveledDiceGeometry(size)
         : new RoundedBoxGeometry(size, size, size, 4, size * 0.07);
 
-    let material;
-    // Use shader material if available
-    if (style.shader) {
-        material = createDiceShaderMaterial(style.shader);
-    }
+    // Classic dice: canvas face textures (white-ish body + pips + black border)
+    const materials = createDiceFaceMaterials(style.body, style.dot);
 
-    if (!material) {
-        material = new THREE.MeshStandardMaterial({
-            color: style.body,
-            metalness: 0.8,
-            roughness: 0.2,
-            envMap,
-            envMapIntensity: 1.8,
-        });
-    }
+    const dice = new THREE.Mesh(geometry, materials);
 
-    const dice = new THREE.Mesh(geometry, material);
-
-    // Only add physical dots for non-shader dice (shader dice have visual effects instead)
-    if (!style.shader) {
-        addDiceDots(dice, size, style);
-    }
-
-    // Edge glow shell
-    const glowGeom = new RoundedBoxGeometry(size * 1.05, size * 1.05, size * 1.05, 3, size * 0.08);
+    // Subtle edge glow shell (very faint, matches dot color)
+    const glowGeom = new RoundedBoxGeometry(size * 1.06, size * 1.06, size * 1.06, 3, size * 0.08);
     const glowMat = new THREE.MeshBasicMaterial({
         color: style.emissive,
         transparent: true,
-        opacity: 0.06,
+        opacity: 0.04,
         side: THREE.BackSide,
     });
     dice.add(new THREE.Mesh(glowGeom, glowMat));
 
     // Inner point light
-    const innerLight = new THREE.PointLight(style.emissive, 0.25, size * 3);
+    const innerLight = new THREE.PointLight(style.emissive, 0.2, size * 3);
     dice.add(innerLight);
 
     dice.userData.style = style;
-    dice.userData.shaderMat = style.shader ? material : null;
+    dice.userData.shaderMat = null;
     return dice;
-}
-
-function addDiceDots(dice, size, style) {
-    const dotRadius = size * 0.048;
-    const dotGeom = new THREE.SphereGeometry(dotRadius, 12, 12);
-    const dotMat = new THREE.MeshStandardMaterial({
-        color: style.dot,
-        emissive: style.emissive,
-        emissiveIntensity: 1.5,
-        metalness: 0.9,
-        roughness: 0.05,
-    });
-
-    const offset = size * 0.18;
-    const surface = size * 0.51;
-
-    const faces = [
-        { dir: [0, 0, 1], dots: [[0, 0]] },
-        { dir: [0, 0, -1], dots: [[-offset, offset], [offset, -offset]] },
-        { dir: [1, 0, 0], dots: [[-offset, offset], [0, 0], [offset, -offset]] },
-        { dir: [-1, 0, 0], dots: [[-offset, -offset], [offset, -offset], [-offset, offset], [offset, offset]] },
-        { dir: [0, 1, 0], dots: [[-offset, -offset], [offset, -offset], [0, 0], [-offset, offset], [offset, offset]] },
-        { dir: [0, -1, 0], dots: [[-offset, -offset], [offset, -offset], [-offset, 0], [offset, 0], [-offset, offset], [offset, offset]] },
-    ];
-
-    faces.forEach(face => {
-        const [nx, ny, nz] = face.dir;
-        face.dots.forEach(([dx, dy]) => {
-            const dot = new THREE.Mesh(dotGeom, dotMat);
-            if (nz !== 0) dot.position.set(dx, dy, nz * surface);
-            else if (nx !== 0) dot.position.set(nx * surface, dy, dx);
-            else dot.position.set(dx, ny * surface, dy);
-            dice.add(dot);
-        });
-    });
 }
 
 function createEnvMap() {
