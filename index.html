@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dice Tycoon — 桌面骰子牧场</title>
+    <meta name="description" content="掷骰 · 收集 · 繁育 · 放置 — 一款放置好时光的桌面骰子游戏">
+    <meta name="theme-color" content="#050508">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Sans+SC:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <canvas id="webgl"></canvas>
+    <div id="cursor-glow"></div>
+
+    <nav id="nav-dots" aria-label="Section navigation">
+        <span class="nav-progress">01</span>
+        <button class="nav-dot active" data-index="0" aria-label="Hero"></button>
+        <button class="nav-dot" data-index="1" aria-label="Roll"></button>
+        <button class="nav-dot" data-index="2" aria-label="Collection"></button>
+        <button class="nav-dot" data-index="3" aria-label="Combo"></button>
+        <button class="nav-dot" data-index="4" aria-label="Breed"></button>
+        <button class="nav-dot" data-index="5" aria-label="Play"></button>
+        <span class="nav-total">06</span>
+    </nav>
+
+    <div id="scroll-container">
+        <!-- Section 0: Hero -->
+        <section class="section section-hero" data-section="0">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="line">DICE</span>
+                    <span class="line">TYCOON</span>
+                </h1>
+                <p class="hero-subtitle">掷骰 · 收集 · 繁育 · 放置</p>
+                <div class="scroll-hint">
+                    <span>Scroll to explore</span>
+                    <div class="scroll-arrow"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 1: Roll -->
+        <section class="section section-roll" data-section="1">
+            <div class="section-content">
+                <h2 class="section-title">掷出命运</h2>
+                <p class="section-desc">每一次投掷都是一段新的旅程<br>观察骰子在空中翻滚，等待命运揭晓<br>每次落地，都是一个全新的可能</p>
+                <div class="feature-badges">
+                    <span class="badge">自动投掷</span>
+                    <span class="badge">放置挂机</span>
+                    <span class="badge">极速模式</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Collection -->
+        <section class="section section-collection" data-section="2">
+            <div class="section-content">
+                <h2 class="section-title">收集万象</h2>
+                <p class="section-desc"><b>7</b> 种点面 × <b>7</b> 种骰面<br>每一颗骰子都独一无二<br>扭蛋抽奖、融合工坊，解锁稀有变种</p>
+                <div class="feature-badges">
+                    <span class="badge">49+ 组合</span>
+                    <span class="badge">稀有变种</span>
+                    <span class="badge">融合工坊</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Combo -->
+        <section class="section section-combo" data-section="3">
+            <div class="section-content">
+                <h2 class="section-title">组合的艺术</h2>
+                <p class="section-desc"><b>22</b> 种牌型组合<br>从对子到满堂彩，策略深度无限<br>强化组合，解锁更高倍率</p>
+                <div class="feature-badges">
+                    <span class="badge">对子</span>
+                    <span class="badge">顺子</span>
+                    <span class="badge">满堂彩</span>
+                    <span class="badge">彩虹</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Breed -->
+        <section class="section section-breed" data-section="4">
+            <div class="section-content">
+                <h2 class="section-title">繁育传承</h2>
+                <p class="section-desc">骰子也有生命<br>繁育、遗传、进化<br>打造你的最强血统帝国</p>
+                <div class="feature-badges">
+                    <span class="badge">自动繁殖</span>
+                    <span class="badge">基因遗传</span>
+                    <span class="badge">进化突变</span>
+                </div>
+
+                <!-- Floating feature cards with parallax -->
+                <div class="feature-cards">
+                    <div class="feature-card" data-depth="0.4">
+                        <div class="card-icon">🎰</div>
+                        <h3>放置挂机</h3>
+                        <p>离线也能收益，随时回来收金币</p>
+                    </div>
+                    <div class="feature-card" data-depth="0.7">
+                        <div class="card-icon">🌳</div>
+                        <h3>技能树</h3>
+                        <p>56 节点 4 路径，深度养成</p>
+                    </div>
+                    <div class="feature-card" data-depth="0.55">
+                        <div class="card-icon">⚔️</div>
+                        <h3>远征挑战</h3>
+                        <p>层层关卡，挑战极限收益</p>
+                    </div>
+                    <div class="feature-card" data-depth="0.85">
+                        <div class="card-icon">🎁</div>
+                        <h3>扭蛋抽奖</h3>
+                        <p>稀有骰子等你抽取收集</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: CTA -->
+        <section class="section section-cta" data-section="5">
+            <div class="section-content cta-content">
+                <h2 class="section-title">开始你的骰子帝国</h2>
+                <p class="section-desc">放置好时光，尽在掌中</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary">立即游玩</a>
+                    <a href="#" class="btn btn-secondary">了解更多</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2024 Dice Tycoon. All rights reserved. | <a href="#">隐私政策</a> | <a href="#">联系我们</a></p>
+        </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
