@@ -9,9 +9,9 @@ const CompositeShader = {
     uniforms: {
         tDiffuse: { value: null },
         uTime: { value: 0 },
-        uRGBShift: { value: 0.003 },
-        uVignette: { value: 0.4 },
-        uContrast: { value: 1.05 },
+        uRGBShift: { value: 0.0015 },
+        uVignette: { value: 0.15 },
+        uContrast: { value: 1.02 },
         uBrightness: { value: 0.0 },
     },
     vertexShader: `
@@ -74,12 +74,12 @@ export function initPostProcessing(renderer, scene, camera, state) {
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
-    // Bloom (Unreal-style, like Active Theory)
+    // Bloom (subtle on light background)
     const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(state.width, state.height),
-        0.8,    // strength
-        0.4,    // radius
-        0.85    // threshold
+        0.3,    // strength (reduced for light bg)
+        0.5,    // radius
+        0.9     // threshold (higher = only bright spots bloom)
     );
     composer.addPass(bloomPass);
 
@@ -93,7 +93,7 @@ export function initPostProcessing(renderer, scene, camera, state) {
         compositePass.uniforms.uTime.value = state.time;
         // Increase chromatic aberration slightly when scrolling fast
         const scrollSpeed = Math.abs(state.scrollTarget - state.scroll);
-        compositePass.uniforms.uRGBShift.value = 0.002 + scrollSpeed * 0.02;
+        compositePass.uniforms.uRGBShift.value = 0.001 + scrollSpeed * 0.01;
         originalRender(dt);
     };
 

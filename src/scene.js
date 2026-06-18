@@ -29,8 +29,8 @@ export function initScene(canvas, state) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x030306);
-    scene.fog = new THREE.FogExp2(0x030306, 0.05);
+    scene.background = new THREE.Color(0xf5f5f8);
+    scene.fog = new THREE.FogExp2(0xf5f5f8, 0.04);
 
     const camera = new THREE.PerspectiveCamera(40, state.width / state.height, 0.1, 100);
     camera.position.set(0, 0, 7);
@@ -93,23 +93,28 @@ export function initScene(canvas, state) {
 }
 
 function setupLighting(scene) {
-    const keyLight = new THREE.DirectionalLight(0xffeedd, 2.5);
+    // Key light — bright warm from top-right (main illumination)
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
     keyLight.position.set(3, 5, 4);
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0x6677ff, 0.6);
+    // Fill light — soft blue from left
+    const fillLight = new THREE.DirectionalLight(0xaabbff, 0.8);
     fillLight.position.set(-4, 1, 3);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xff6b35, 1.5);
-    rimLight.position.set(0, -3, -4);
+    // Rim/accent light (animated per section)
+    const rimLight = new THREE.DirectionalLight(0xff6b35, 0.6);
+    rimLight.position.set(0, -2, -4);
     scene.add(rimLight);
 
-    const topLight = new THREE.PointLight(0xffd700, 0.8, 10);
+    // Top accent
+    const topLight = new THREE.PointLight(0xffd700, 0.4, 10);
     topLight.position.set(0, 4, 2);
     scene.add(topLight);
 
-    const ambient = new THREE.AmbientLight(0x151520, 0.4);
+    // Ambient — brighter for light theme
+    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambient);
 
     return { key: keyLight, fill: fillLight, rim: rimLight, top: topLight };
@@ -189,11 +194,10 @@ function createParticles(scene) {
     const dustGeom = new THREE.BufferGeometry();
     dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
     const dustMat = new THREE.PointsMaterial({
-        color: 0xffffff,
-        size: 0.012,
+        color: 0x888899,
+        size: 0.015,
         transparent: true,
-        opacity: 0.25,
-        blending: THREE.AdditiveBlending,
+        opacity: 0.2,
         sizeAttenuation: true,
     });
     const dust = new THREE.Points(dustGeom, dustMat);
@@ -210,10 +214,9 @@ function createParticles(scene) {
     accentGeom.setAttribute('position', new THREE.BufferAttribute(accentPositions, 3));
     const accentMat = new THREE.PointsMaterial({
         color: 0xff6b35,
-        size: 0.035,
+        size: 0.03,
         transparent: true,
-        opacity: 0.45,
-        blending: THREE.AdditiveBlending,
+        opacity: 0.3,
         sizeAttenuation: true,
     });
     const accent = new THREE.Points(accentGeom, accentMat);
@@ -226,14 +229,14 @@ function createParticles(scene) {
 function createGlowOrbs(scene) {
     const orbGeom = new THREE.SphereGeometry(0.5, 12, 12);
     const orbs = [
-        { pos: [-5, 2, -7], color: 0xff6b35, opacity: 0.035, scale: 2.5 },
-        { pos: [5, -1, -9], color: 0x4444ff, opacity: 0.025, scale: 3.5 },
-        { pos: [-2, -3, -6], color: 0xffd700, opacity: 0.02, scale: 2 },
-        { pos: [3, 3, -8], color: 0xff3366, opacity: 0.025, scale: 3 },
+        { pos: [-5, 2, -7], color: 0xff6b35, opacity: 0.03, scale: 2.5 },
+        { pos: [5, -1, -9], color: 0x6666ff, opacity: 0.02, scale: 3.5 },
+        { pos: [-2, -3, -6], color: 0xffaa00, opacity: 0.02, scale: 2 },
+        { pos: [3, 3, -8], color: 0xff3366, opacity: 0.02, scale: 3 },
     ];
     orbs.forEach(({ pos, color, opacity, scale }) => {
         const mat = new THREE.MeshBasicMaterial({
-            color, transparent: true, opacity, blending: THREE.AdditiveBlending,
+            color, transparent: true, opacity,
         });
         const orb = new THREE.Mesh(orbGeom, mat);
         orb.position.set(...pos);

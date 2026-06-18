@@ -8,14 +8,14 @@ import { initTextAnimations } from './text.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ===== Section color themes (background tint that lerps between sections) =====
+// ===== Section color themes (light background tints) =====
 const SECTION_THEMES = [
-    { bg: [0.012, 0.012, 0.024], accent: [1.0, 0.42, 0.21] },   // Hero: deep blue-black, orange accent
-    { bg: [0.02, 0.015, 0.008], accent: [1.0, 0.84, 0.0] },      // Roll: warm dark, gold
-    { bg: [0.015, 0.008, 0.03], accent: [0.65, 0.55, 0.98] },    // Collection: purple tint
-    { bg: [0.008, 0.02, 0.015], accent: [0.2, 0.83, 0.6] },      // Combo: green tint
-    { bg: [0.02, 0.008, 0.02], accent: [0.96, 0.45, 0.71] },     // Breed: pink tint
-    { bg: [0.02, 0.012, 0.005], accent: [1.0, 0.55, 0.2] },      // CTA: warm orange
+    { bg: [0.96, 0.96, 0.97], accent: [1.0, 0.42, 0.21] },   // Hero: off-white
+    { bg: [0.97, 0.96, 0.93], accent: [0.83, 0.59, 0.04] },   // Roll: warm cream
+    { bg: [0.95, 0.94, 0.98], accent: [0.49, 0.23, 0.93] },   // Collection: lavender tint
+    { bg: [0.93, 0.97, 0.95], accent: [0.02, 0.59, 0.41] },   // Combo: mint tint
+    { bg: [0.97, 0.94, 0.96], accent: [0.86, 0.15, 0.46] },   // Breed: pink tint
+    { bg: [0.97, 0.95, 0.93], accent: [1.0, 0.42, 0.21] },    // CTA: warm cream
 ];
 
 // ===== App State =====
