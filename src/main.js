@@ -44,6 +44,7 @@ const state = {
 };
 
 // ===== Init =====
+const clock = new THREE.Clock();
 const canvas = document.getElementById('webgl');
 const scrollContainer = document.getElementById('scroll-container');
 
@@ -60,7 +61,9 @@ window.addEventListener('load', () => {
     state.loaded = true;
     document.body.classList.add('loaded');
 });
-animate();
+// Defer first frame to next tick so all module-level const bindings are fully initialized
+// (avoids TDZ violations in bundled output)
+requestAnimationFrame(animate);
 
 // ===== Nav dots =====
 const navDots = document.querySelectorAll('.nav-dot');
@@ -244,8 +247,6 @@ function getSectionColor(scroll, key) {
 }
 
 // ===== Animation Loop =====
-const clock = new THREE.Clock();
-
 function animate() {
     requestAnimationFrame(animate);
     const dt = Math.min(clock.getDelta(), 0.05);
