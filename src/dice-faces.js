@@ -1,26 +1,16 @@
 import * as THREE from 'three';
 
-// ===== Dice face textures — numbers display mode (matching game) =====
-// Each face shows a large centered number with black stroke + colored fill
+// ===== Dice face textures — exact port from game's DiceFaceTexture.ts =====
+// Rendering: face background + number (centered, bold, black stroke) + black edge border
+// Material: non-metallic, low roughness (plastic/ceramic feel, not PBR metallic)
 
-// BoxGeometry material order: +X, -X, +Y, -Y, +Z, -Z
-// Standard die: opposite faces sum to 7
-const FACE_VALUE_ORDER = [3, 4, 1, 6, 2, 5];
-
+const FACE_VALUE_ORDER = [3, 4, 1, 6, 2, 5]; // BoxGeometry material slots → face values
 const TEX_SIZE = 512;
 
-// Number color presets
-export const NUMBER_PRESETS = {
-    normal:  { numColor: '#1a1a1a', stroke: '#000000' },
-    golden:  { numColor: '#d4960a', stroke: '#1a1a1a' },
-    fire:    { numColor: '#ef4444', stroke: '#1a1a1a' },
-    ice:     { numColor: '#0284c7', stroke: '#0a1628' },
-    crystal: { numColor: '#38bdf8', stroke: '#0a1628' },
-    arcane:  { numColor: '#9333ea', stroke: '#1a0a3a' },
-};
+// ===== Exact game render functions =====
 
 function renderEdgeBorder(ctx, s) {
-    const b = s * 0.06;
+    const b = s * 0.06;  // 6% border width (matches game)
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, s, b);
     ctx.fillRect(0, s - b, s, b);
@@ -28,79 +18,86 @@ function renderEdgeBorder(ctx, s) {
     ctx.fillRect(s - b, 0, b, s);
 }
 
-function renderNumber(ctx, faceValue, s, preset) {
-    const fontSize = Math.floor(s * 0.58);
+function renderFaceBg(ctx, s, bodyColor) {
+    // Game uses flat white fill for 'normal' faceType
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(0, 0, s, s);
+}
+
+function renderNumberCenteredStroke(ctx, faceValue, s, numColor, strokeColor) {
+    // Exact port from game: renderNumberCenteredStroke
+    const fontSize = Math.floor(s * 0.62);  // game uses 0.62 for normal+center
     const cx = s / 2;
-    const cy = s / 2 + fontSize * 0.04; // slight baseline correction
+    const cy = s / 2 + fontSize * 0.04;  // slight baseline correction
 
     ctx.save();
     ctx.font = `bold ${fontSize}px GameFont, "Helvetica Neue", Helvetica, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.lineJoin = 'round';
+    ctx.lineJoin = 'round';  // game uses round join for smooth stroke corners
 
     const numStr = String(faceValue);
 
-    // Black stroke (thick) for contrast
-    ctx.strokeStyle = preset.stroke;
+    // Black stroke (game: lineWidth = max(floor(fontSize * 0.07), 4))
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = Math.max(Math.floor(fontSize * 0.07), 4);
     ctx.strokeText(numStr, cx, cy);
 
     // Number fill
-    ctx.fillStyle = preset.numColor;
+    ctx.fillStyle = numColor;
     ctx.fillText(numStr, cx, cy);
 
     ctx.restore();
 }
 
-function createFaceTexture(faceValue, bodyColor, preset) {
+function createFaceTexture(faceValue, bodyColor, numColor, strokeColor) {
     const s = TEX_SIZE;
     const canvas = document.createElement('canvas');
     canvas.width = s;
     canvas.height = s;
     const ctx = canvas.getContext('2d');
 
-    // Face background — subtle gradient for depth
-    const bg = ctx.createRadialGradient(s / 2, s * 0.4, 0, s / 2, s / 2, s * 0.75);
-    bg.addColorStop(0, lighten(bodyColor, 12));
-    bg.addColorStop(1, bodyColor);
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, s, s);
+    // Layer 1: Face background (game: renderFaceBg)
+    renderFaceBg(ctx, s, bodyColor);
 
-    // Large centered number (game's "numbers" display mode)
-    renderNumber(ctx, faceValue, s, preset);
+    // Layer 2: Number centered with stroke (game: renderNumberCenteredStroke)
+    renderNumberCenteredStroke(ctx, faceValue, s, numColor, strokeColor);
 
-    // Edge border
+    // Layer 3: Edge border (game: renderEdgeBorder)
     renderEdgeBorder(ctx, s);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.needsUpdate = true;
     tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;  // game: crisp text, no mipmap blur
+    tex.generateMipmaps = false;
     tex.anisotropy = 16;
     return tex;
 }
 
-function lighten(hex, percent) {
-    const num = parseInt(hex.slice(1), 16);
-    const r = Math.min(255, (num >> 16) + Math.round(255 * percent / 100));
-    const g = Math.min(255, ((num >> 8) & 0xff) + Math.round(255 * percent / 100));
-    const b = Math.min(255, (num & 0xff) + Math.round(255 * percent / 100));
-    return `rgb(${r},${g},${b})`;
-}
+// ===== Dice style presets (matching game's face+dot type combos) =====
+export const DICE_PRESETS = {
+    normal:  { body: '#ffffff', num: '#1a1a1a', stroke: '#000000' },
+    golden:  { body: '#ffffff', num: '#b8860b', stroke: '#000000' },
+    fire:    { body: '#1a0a0a', num: '#ff4444', stroke: '#000000' },
+    ice:     { body: '#f0f9ff', num: '#0369a1', stroke: '#0a1628' },
+    arcane:  { body: '#faf5ff', num: '#7c3aed', stroke: '#1a0a3a' },
+    shadow:  { body: '#1a0a2e', num: '#ffffff', stroke: '#1a0a3a' },
+    wild:    { body: '#ffffff', num: '#1a1a1a', stroke: '#000000' },
+};
 
 /**
- * Get 6 face material array for a dice (numbers display mode).
- * bodyColor: hex string for face background (e.g. '#f4f4ee' for classic white)
- * numPreset: key into NUMBER_PRESETS
+ * Create 6 face materials for a dice — exact game rendering method.
+ * Uses non-metallic material (plastic/ceramic look, not PBR metallic).
  */
-export function createDiceFaceMaterials(bodyColor = '#f4f4ee', numPreset = 'normal') {
-    const preset = NUMBER_PRESETS[numPreset] || NUMBER_PRESETS.normal;
+export function createDiceFaceMaterials(preset = 'normal') {
+    const p = DICE_PRESETS[preset] || DICE_PRESETS.normal;
     return FACE_VALUE_ORDER.map(fv => {
-        const tex = createFaceTexture(fv, bodyColor, preset);
+        const tex = createFaceTexture(fv, p.body, p.num, p.stroke);
         return new THREE.MeshStandardMaterial({
             map: tex,
-            metalness: 0.15,
-            roughness: 0.45,
+            metalness: 0.0,     // game uses flat shader, no metallic
+            roughness: 0.35,    // slight gloss like plastic dice
         });
     });
 }

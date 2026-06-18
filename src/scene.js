@@ -4,15 +4,15 @@ import { BeveledDiceGeometry } from './dice-geometry.js';
 import { createDiceFaceMaterials } from './dice-faces.js';
 import { ThrowTrail, Shockwave } from './effects.js';
 
-// ===== Dice variety — numbers display mode (matches game) =====
+// ===== Dice presets — matching game's face/dot type combos =====
 const DICE_STYLES = [
-    { body: '#f4f4ee', num: 'normal',  emissive: 0xffe0a0, name: 'classic' },  // 经典白底黑字
-    { body: '#fff8e8', num: 'golden',  emissive: 0xffcc44, name: 'golden' },   // 暖白金字
-    { body: '#1a1018', num: 'fire',    emissive: 0xff5522, name: 'fire' },     // 暗体红字
-    { body: '#eef6ff', num: 'ice',     emissive: 0x66bbff, name: 'ice' },      // 冰白蓝字
-    { body: '#f0eafc', num: 'arcane',  emissive: 0xaa66ff, name: 'arcane' },   // 淡紫奥术
-    { body: '#fef0e0', num: 'crystal', emissive: 0x66ddff, name: 'crystal' },  // 水晶蓝字
-    { body: '#1a1a1e', num: 'golden',  emissive: 0xffd700, name: 'obsidian' }, // 黑曜金字
+    { preset: 'normal',  emissive: 0x999999, name: 'normal' },
+    { preset: 'golden',  emissive: 0xffcc44, name: 'golden' },
+    { preset: 'fire',    emissive: 0xff3311, name: 'fire' },
+    { preset: 'ice',     emissive: 0x44aaff, name: 'ice' },
+    { preset: 'arcane',  emissive: 0x9955ff, name: 'arcane' },
+    { preset: 'shadow',  emissive: 0x8833cc, name: 'shadow' },
+    { preset: 'wild',    emissive: 0xff6b35, name: 'wild' },
 ];
 
 export function initScene(canvas, state) {
@@ -125,32 +125,29 @@ function setupLighting(scene) {
 
 function createSingleDice(size, style, envMap, useBeveled = false) {
     // Use BeveledDiceGeometry for hero, RoundedBox for smaller dice
-    // Both have 6 material groups (one per face) for the face-texture material array
     const geometry = useBeveled
         ? new BeveledDiceGeometry(size)
         : new RoundedBoxGeometry(size, size, size, 4, size * 0.07);
 
-    // Numbers display mode: large centered number on each face (matches game)
-    const materials = createDiceFaceMaterials(style.body, style.num);
+    // Game-accurate face materials (canvas texture, non-metallic plastic)
+    const materials = createDiceFaceMaterials(style.preset);
 
     const dice = new THREE.Mesh(geometry, materials);
 
-    // Subtle edge glow shell (very faint, matches dot color)
-    const glowGeom = new RoundedBoxGeometry(size * 1.06, size * 1.06, size * 1.06, 3, size * 0.08);
+    // Subtle drop shadow (flat dark disk below dice for grounding)
+    // skipped — background is transparent, shadow not meaningful
+
+    // Very subtle edge glow
+    const glowGeom = new RoundedBoxGeometry(size * 1.04, size * 1.04, size * 1.04, 3, size * 0.08);
     const glowMat = new THREE.MeshBasicMaterial({
         color: style.emissive,
         transparent: true,
-        opacity: 0.04,
+        opacity: 0.03,
         side: THREE.BackSide,
     });
     dice.add(new THREE.Mesh(glowGeom, glowMat));
 
-    // Inner point light
-    const innerLight = new THREE.PointLight(style.emissive, 0.2, size * 3);
-    dice.add(innerLight);
-
     dice.userData.style = style;
-    dice.userData.shaderMat = null;
     return dice;
 }
 
