@@ -35,30 +35,31 @@ export function initScrollAnimations(container, state) {
         // Skip hero section (has its own char-level animation)
         if (section.classList.contains('section-hero')) return;
 
-        // DNA helix: entire text block rotates around Z-axis into view
+        // DNA helix: entire text block rotates around Y-axis from far to near
         // Alternating direction like DNA base-pairs
         const direction = sectionIndex % 2 === 0 ? 1 : -1;
-        const startRotation = direction * 90; // ±90° start
+        const startRotation = direction * 90; // ±90° around Y
 
         gsap.set(content, {
-            rotateZ: startRotation,
+            rotateY: startRotation,
             opacity: 0,
-            scale: 0.7,
+            z: -200, // starts far away
             transformOrigin: 'center center',
+            transformPerspective: 1000,
         });
 
-        // Scroll-driven rotation: scrub from rotated → flat
+        // Scroll-driven: rotates around Y-axis from side/back → facing viewer
         gsap.to(content, {
-            rotateZ: 0,
+            rotateY: 0,
             opacity: 1,
-            scale: 1,
+            z: 0,
             ease: 'power2.out',
             scrollTrigger: {
                 trigger: section,
                 scroller: container,
                 start: 'top 85%',
                 end: 'top 35%',
-                scrub: 0.8, // tied to scroll position
+                scrub: 0.8,
             },
         });
 
