@@ -1,17 +1,7 @@
 import * as THREE from 'three';
 
-// ===== Dice face textures — ported from game's DiceFaceTexture.ts =====
-// Classic white face + black pips with gradient/highlight/shadow + black border
-
-// Dot positions per face value (normalized 0-1) — matches game
-const DOT_POSITIONS = {
-    1: [[0.5, 0.5]],
-    2: [[0.78, 0.22], [0.22, 0.78]],
-    3: [[0.78, 0.22], [0.5, 0.5], [0.22, 0.78]],
-    4: [[0.22, 0.22], [0.78, 0.22], [0.22, 0.78], [0.78, 0.78]],
-    5: [[0.22, 0.22], [0.78, 0.22], [0.5, 0.5], [0.22, 0.78], [0.78, 0.78]],
-    6: [[0.22, 0.22], [0.78, 0.22], [0.22, 0.5], [0.78, 0.5], [0.22, 0.78], [0.78, 0.78]],
-};
+// ===== Dice face textures — numbers display mode (matching game) =====
+// Each face shows a large centered number with black stroke + colored fill
 
 // BoxGeometry material order: +X, -X, +Y, -Y, +Z, -Z
 // Standard die: opposite faces sum to 7
@@ -19,14 +9,14 @@ const FACE_VALUE_ORDER = [3, 4, 1, 6, 2, 5];
 
 const TEX_SIZE = 512;
 
-// Dot color presets (matches game's dot types)
-export const DOT_PRESETS = {
-    normal: { core: '#4a4a4a', edge: '#111111', highlight: 'rgba(255,255,255,0.25)' },
-    golden: { core: '#fff4b8', edge: '#d4960a', highlight: 'rgba(255,255,255,0.55)' },
-    fire:   { core: '#ff8c42', edge: '#c0250a', highlight: 'rgba(255,230,180,0.5)' },
-    ice:    { core: '#bae6fd', edge: '#0284c7', highlight: 'rgba(255,255,255,0.5)' },
-    crystal:{ core: '#e0f2fe', edge: '#38bdf8', highlight: 'rgba(255,255,255,0.5)' },
-    arcane: { core: '#e9d5ff', edge: '#9333ea', highlight: 'rgba(255,255,255,0.5)' },
+// Number color presets
+export const NUMBER_PRESETS = {
+    normal:  { numColor: '#1a1a1a', stroke: '#000000' },
+    golden:  { numColor: '#d4960a', stroke: '#1a1a1a' },
+    fire:    { numColor: '#ef4444', stroke: '#1a1a1a' },
+    ice:     { numColor: '#0284c7', stroke: '#0a1628' },
+    crystal: { numColor: '#38bdf8', stroke: '#0a1628' },
+    arcane:  { numColor: '#9333ea', stroke: '#1a0a3a' },
 };
 
 function renderEdgeBorder(ctx, s) {
@@ -38,29 +28,28 @@ function renderEdgeBorder(ctx, s) {
     ctx.fillRect(s - b, 0, b, s);
 }
 
-function renderDot(ctx, x, y, radius, preset) {
+function renderNumber(ctx, faceValue, s, preset) {
+    const fontSize = Math.floor(s * 0.58);
+    const cx = s / 2;
+    const cy = s / 2 + fontSize * 0.04; // slight baseline correction
+
     ctx.save();
-    // Drop shadow
-    ctx.shadowColor = 'rgba(0,0,0,0.28)';
-    ctx.shadowBlur = Math.max(3, radius * 0.25);
-    ctx.shadowOffsetX = radius * 0.06;
-    ctx.shadowOffsetY = radius * 0.08;
+    ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
 
-    // Radial gradient body
-    const g = ctx.createRadialGradient(x - radius * 0.25, y - radius * 0.25, 0, x, y, radius);
-    g.addColorStop(0, preset.core);
-    g.addColorStop(1, preset.edge);
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
+    const numStr = String(faceValue);
 
-    // Inner highlight
-    ctx.shadowColor = 'transparent';
-    ctx.fillStyle = preset.highlight;
-    ctx.beginPath();
-    ctx.arc(x - radius * 0.2, y - radius * 0.2, radius * 0.35, 0, Math.PI * 2);
-    ctx.fill();
+    // Black stroke (thick) for contrast
+    ctx.strokeStyle = preset.stroke;
+    ctx.lineWidth = Math.max(Math.floor(fontSize * 0.07), 4);
+    ctx.strokeText(numStr, cx, cy);
+
+    // Number fill
+    ctx.fillStyle = preset.numColor;
+    ctx.fillText(numStr, cx, cy);
+
     ctx.restore();
 }
 
@@ -71,24 +60,15 @@ function createFaceTexture(faceValue, bodyColor, preset) {
     canvas.height = s;
     const ctx = canvas.getContext('2d');
 
-    // Face background — slightly gradient for premium feel
+    // Face background — subtle gradient for depth
     const bg = ctx.createRadialGradient(s / 2, s * 0.4, 0, s / 2, s / 2, s * 0.75);
-    bg.addColorStop(0, lighten(bodyColor, 18));
+    bg.addColorStop(0, lighten(bodyColor, 12));
     bg.addColorStop(1, bodyColor);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, s, s);
 
-    // Dots
-    const positions = DOT_POSITIONS[faceValue] || [];
-    const padding = s * 0.15;
-    const drawArea = s - padding * 2;
-    const dotRadius = s * (positions.length >= 6 ? 0.090 : 0.125);
-
-    for (const [nx, ny] of positions) {
-        const x = padding + nx * drawArea;
-        const y = padding + ny * drawArea;
-        renderDot(ctx, x, y, dotRadius, preset);
-    }
+    // Large centered number (game's "numbers" display mode)
+    renderNumber(ctx, faceValue, s, preset);
 
     // Edge border
     renderEdgeBorder(ctx, s);
@@ -100,7 +80,6 @@ function createFaceTexture(faceValue, bodyColor, preset) {
     return tex;
 }
 
-// Lighten a hex color by a percentage
 function lighten(hex, percent) {
     const num = parseInt(hex.slice(1), 16);
     const r = Math.min(255, (num >> 16) + Math.round(255 * percent / 100));
@@ -110,12 +89,12 @@ function lighten(hex, percent) {
 }
 
 /**
- * Get 6 face material array for a dice.
- * bodyColor: hex string for face background (e.g. '#f5f5f0' for classic white)
- * dotPreset: key into DOT_PRESETS
+ * Get 6 face material array for a dice (numbers display mode).
+ * bodyColor: hex string for face background (e.g. '#f4f4ee' for classic white)
+ * numPreset: key into NUMBER_PRESETS
  */
-export function createDiceFaceMaterials(bodyColor = '#f4f4ee', dotPreset = 'normal') {
-    const preset = DOT_PRESETS[dotPreset] || DOT_PRESETS.normal;
+export function createDiceFaceMaterials(bodyColor = '#f4f4ee', numPreset = 'normal') {
+    const preset = NUMBER_PRESETS[numPreset] || NUMBER_PRESETS.normal;
     return FACE_VALUE_ORDER.map(fv => {
         const tex = createFaceTexture(fv, bodyColor, preset);
         return new THREE.MeshStandardMaterial({

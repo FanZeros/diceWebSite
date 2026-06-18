@@ -4,16 +4,15 @@ import { BeveledDiceGeometry } from './dice-geometry.js';
 import { createDiceFaceMaterials } from './dice-faces.js';
 import { ThrowTrail, Shockwave } from './effects.js';
 
-// ===== Dice variety — classic face textures (white-ish body + colored pips) =====
-// Matches the game's canvas-rendered dice look
+// ===== Dice variety — numbers display mode (matches game) =====
 const DICE_STYLES = [
-    { body: '#f4f4ee', dot: 'normal',  emissive: 0xffe0a0, name: 'classic' },  // 经典白底黑点
-    { body: '#fff8e8', dot: 'golden',  emissive: 0xffcc44, name: 'golden' },   // 暖白金点
-    { body: '#1a1018', dot: 'fire',    emissive: 0xff5522, name: 'fire' },     // 暗体火点
-    { body: '#eef6ff', dot: 'ice',     emissive: 0x66bbff, name: 'ice' },      // 冰白蓝点
-    { body: '#f0eafc', dot: 'arcane',  emissive: 0xaa66ff, name: 'arcane' },   // 淡紫奥术
-    { body: '#fef0e0', dot: 'crystal', emissive: 0x66ddff, name: 'crystal' },  // 水晶
-    { body: '#1a1a1e', dot: 'golden',  emissive: 0xffd700, name: 'obsidian' }, // 黑曜金点
+    { body: '#f4f4ee', num: 'normal',  emissive: 0xffe0a0, name: 'classic' },  // 经典白底黑字
+    { body: '#fff8e8', num: 'golden',  emissive: 0xffcc44, name: 'golden' },   // 暖白金字
+    { body: '#1a1018', num: 'fire',    emissive: 0xff5522, name: 'fire' },     // 暗体红字
+    { body: '#eef6ff', num: 'ice',     emissive: 0x66bbff, name: 'ice' },      // 冰白蓝字
+    { body: '#f0eafc', num: 'arcane',  emissive: 0xaa66ff, name: 'arcane' },   // 淡紫奥术
+    { body: '#fef0e0', num: 'crystal', emissive: 0x66ddff, name: 'crystal' },  // 水晶蓝字
+    { body: '#1a1a1e', num: 'golden',  emissive: 0xffd700, name: 'obsidian' }, // 黑曜金字
 ];
 
 export function initScene(canvas, state) {
@@ -123,8 +122,8 @@ function createSingleDice(size, style, envMap, useBeveled = false) {
         ? new BeveledDiceGeometry(size)
         : new RoundedBoxGeometry(size, size, size, 4, size * 0.07);
 
-    // Classic dice: canvas face textures (white-ish body + pips + black border)
-    const materials = createDiceFaceMaterials(style.body, style.dot);
+    // Numbers display mode: large centered number on each face (matches game)
+    const materials = createDiceFaceMaterials(style.body, style.num);
 
     const dice = new THREE.Mesh(geometry, materials);
 
