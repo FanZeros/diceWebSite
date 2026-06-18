@@ -1,3 +1,12 @@
+/* GameFont from the actual game */
+@font-face {
+    font-family: 'GameFont';
+    src: url('/font.ttf') format('truetype');
+    font-display: swap;
+    font-weight: normal;
+    font-style: normal;
+}
+
 :root {
     --color-bg: #050508;
     --color-text: #f0f0f5;
@@ -109,23 +118,24 @@ body.loaded #webgl {
 }
 
 .hero-title {
-    font-family: var(--font-display);
+    font-family: 'GameFont', var(--font-display);
     font-weight: 800;
     font-size: clamp(3.5rem, 14vw, 11rem);
     line-height: 0.85;
     letter-spacing: -0.04em;
-    background: linear-gradient(160deg, #ffffff 0%, #e0e0ee 40%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
     margin-bottom: 1.5rem;
 }
 
 .hero-title .line {
     display: block;
     opacity: 0;
-    transform: translateY(80px) rotateX(15deg);
-    transform-origin: bottom center;
+    transform: translateY(80px);
+    /* Gradient on each .line individually — avoids mobile clip+transform conflict */
+    background: linear-gradient(160deg, #ffffff 0%, #e0e0ee 40%, var(--color-accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
 }
 
 .hero-subtitle {

@@ -47,19 +47,35 @@ const state = {
 const canvas = document.getElementById('webgl');
 const scrollContainer = document.getElementById('scroll-container');
 
-// Scene setup
-const { scene, camera, renderer, dice, particles, lights, trail, shockwave } = initScene(canvas, state);
-const composer = initPostProcessing(renderer, scene, camera, state);
+// Wait for fonts (GameFont needed for Canvas dice textures), then init scene
+let scene, camera, renderer, dice, particles, lights, trail, shockwave, composer;
 
-// Scroll & Text animations
-initScrollAnimations(scrollContainer, state);
-initTextAnimations(scrollContainer);
+async function initApp() {
+    // Ensure GameFont is loaded before creating dice textures
+    await document.fonts.ready;
 
-// ===== Loading transition =====
-window.addEventListener('load', () => {
+    const sceneData = initScene(canvas, state);
+    scene = sceneData.scene;
+    camera = sceneData.camera;
+    renderer = sceneData.renderer;
+    dice = sceneData.dice;
+    particles = sceneData.particles;
+    lights = sceneData.lights;
+    trail = sceneData.trail;
+    shockwave = sceneData.shockwave;
+    composer = initPostProcessing(renderer, scene, camera, state);
+
+    // Scroll & Text animations
+    initScrollAnimations(scrollContainer, state);
+    initTextAnimations(scrollContainer);
+
     state.loaded = true;
     document.body.classList.add('loaded');
-});
+
+    // Start render loop
+    animate();
+}
+initApp();
 
 // ===== Nav dots =====
 const navDots = document.querySelectorAll('.nav-dot');
@@ -188,6 +204,7 @@ function onResize() {
         state.width = window.innerWidth;
         state.height = window.innerHeight;
         state.dpr = Math.min(window.devicePixelRatio, 2);
+        if (!camera) return; // not yet initialized
 
         camera.aspect = state.width / state.height;
         camera.updateProjectionMatrix();
@@ -693,4 +710,3 @@ function updateParticles(dt) {
     }
 }
 
-animate();

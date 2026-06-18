@@ -34,7 +34,7 @@ function renderNumber(ctx, faceValue, s, preset) {
     const cy = s / 2 + fontSize * 0.04; // slight baseline correction
 
     ctx.save();
-    ctx.font = `bold ${fontSize}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+    ctx.font = `bold ${fontSize}px GameFont, "Helvetica Neue", Helvetica, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.lineJoin = 'round';
