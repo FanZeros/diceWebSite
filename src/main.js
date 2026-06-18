@@ -8,14 +8,14 @@ import { initTextAnimations } from './text.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ===== Section color themes (light background tints) =====
+// ===== Section color themes (dark background with accent glows) =====
 const SECTION_THEMES = [
-    { bg: [0.96, 0.96, 0.97], accent: [1.0, 0.42, 0.21] },   // Hero: off-white
-    { bg: [0.97, 0.96, 0.93], accent: [0.83, 0.59, 0.04] },   // Roll: warm cream
-    { bg: [0.95, 0.94, 0.98], accent: [0.49, 0.23, 0.93] },   // Collection: lavender tint
-    { bg: [0.93, 0.97, 0.95], accent: [0.02, 0.59, 0.41] },   // Combo: mint tint
-    { bg: [0.97, 0.94, 0.96], accent: [0.86, 0.15, 0.46] },   // Breed: pink tint
-    { bg: [0.97, 0.95, 0.93], accent: [1.0, 0.42, 0.21] },    // CTA: warm cream
+    { bg: [0.04, 0.04, 0.08], accent: [1.0, 0.42, 0.21] },   // Hero: deep dark
+    { bg: [0.05, 0.04, 0.03], accent: [0.94, 0.75, 0.15] },   // Roll: warm dark
+    { bg: [0.04, 0.03, 0.08], accent: [0.65, 0.55, 0.98] },   // Collection: purple dark
+    { bg: [0.03, 0.05, 0.04], accent: [0.2, 0.82, 0.6] },    // Combo: teal dark
+    { bg: [0.05, 0.03, 0.06], accent: [0.96, 0.29, 0.69] },   // Breed: pink dark
+    { bg: [0.05, 0.04, 0.03], accent: [1.0, 0.42, 0.21] },    // CTA: warm dark
 ];
 
 // ===== App State =====
@@ -341,11 +341,32 @@ function lerpAngleShortest(current, target, t) {
 }
 
 function updateBackground(dt) {
-    // Canvas is transparent — CSS handles the layered gradient background.
-    // We only animate the rim light color to match section accent.
+    // Animate rim light color to match section accent
     if (lights && lights.rim) {
         const [ar, ag, ab] = getSectionColor(state.scroll, 'accent');
         lights.rim.color.setRGB(ar, ag, ab);
+    }
+
+    // Slowly drift the fog density based on section for flowing dark atmosphere
+    if (scene && scene.fog) {
+        const targetDensity = 0.015 + Math.sin(state.time * 0.1) * 0.005;
+        scene.fog.density += (targetDensity - scene.fog.density) * 0.02;
+    }
+
+    // Animate glow orbs to float slowly (flowing nebula feel)
+    if (scene) {
+        scene.children.forEach((child, i) => {
+            if (child.isMesh && child.material && child.material.transparent && child.geometry?.type === 'SphereGeometry') {
+                const baseY = child.position.y;
+                child.position.y += Math.sin(state.time * 0.15 + i * 1.7) * dt * 0.08;
+                child.position.x += Math.cos(state.time * 0.1 + i * 2.3) * dt * 0.05;
+                // Pulse opacity
+                const pulse = 0.7 + Math.sin(state.time * 0.2 + i * 1.1) * 0.3;
+                child.material.opacity = child.userData.baseOpacity
+                    ? child.userData.baseOpacity * pulse
+                    : child.material.opacity;
+            }
+        });
     }
 }
 

@@ -29,9 +29,9 @@ export function initScene(canvas, state) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    // Layered gradient background texture (depth through color, not flat)
+    // Dark flowing gradient background
     scene.background = createGradientBackground();
-    scene.fog = new THREE.FogExp2(0xf0eef5, 0.025);
+    scene.fog = new THREE.FogExp2(0x0a0a18, 0.02);
 
     const camera = new THREE.PerspectiveCamera(40, state.width / state.height, 0.1, 100);
     camera.position.set(0, 0, 7);
@@ -94,28 +94,28 @@ export function initScene(canvas, state) {
 }
 
 function setupLighting(scene) {
-    // Key light — bright warm from top-right (main illumination)
-    const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    // Key light — warm from top-right
+    const keyLight = new THREE.DirectionalLight(0xffeedd, 1.8);
     keyLight.position.set(3, 5, 4);
     scene.add(keyLight);
 
-    // Fill light — soft blue from left
-    const fillLight = new THREE.DirectionalLight(0xaabbff, 0.8);
+    // Fill light — cool blue from left
+    const fillLight = new THREE.DirectionalLight(0x6688ff, 0.6);
     fillLight.position.set(-4, 1, 3);
     scene.add(fillLight);
 
     // Rim/accent light (animated per section)
-    const rimLight = new THREE.DirectionalLight(0xff6b35, 0.6);
+    const rimLight = new THREE.DirectionalLight(0xff6b35, 0.8);
     rimLight.position.set(0, -2, -4);
     scene.add(rimLight);
 
     // Top accent
-    const topLight = new THREE.PointLight(0xffd700, 0.4, 10);
+    const topLight = new THREE.PointLight(0xffd700, 0.5, 10);
     topLight.position.set(0, 4, 2);
     scene.add(topLight);
 
-    // Ambient — brighter for light theme
-    const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+    // Ambient — dim for dark theme (deep atmosphere)
+    const ambient = new THREE.AmbientLight(0x222244, 0.8);
     scene.add(ambient);
 
     return { key: keyLight, fill: fillLight, rim: rimLight, top: topLight };
@@ -150,46 +150,49 @@ function createSingleDice(size, style, envMap, useBeveled = false) {
 }
 
 function createGradientBackground() {
-    // Layered gradient background — multiple soft color orbs for depth
+    // Dark nebula-like gradient with flowing color orbs
     const size = 1024;
     const canvas = document.createElement('canvas');
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
 
-    // Base: warm off-white gradient (top) → cool lavender (bottom)
+    // Base: deep dark blue-black gradient
     const base = ctx.createLinearGradient(0, 0, 0, size);
-    base.addColorStop(0, '#faf8f5');
-    base.addColorStop(0.35, '#f5f3f8');
-    base.addColorStop(0.65, '#f0eef6');
-    base.addColorStop(1, '#f5f2f0');
+    base.addColorStop(0, '#08081a');
+    base.addColorStop(0.3, '#0c0c22');
+    base.addColorStop(0.6, '#0a0a1c');
+    base.addColorStop(1, '#060612');
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, size, size);
 
-    // Warm orb: top-right (soft peach/amber)
-    const orb1 = ctx.createRadialGradient(size * 0.75, size * 0.15, 0, size * 0.75, size * 0.15, size * 0.4);
-    orb1.addColorStop(0, 'rgba(255, 180, 100, 0.18)');
+    // Warm nebula: top-right (deep orange/amber glow)
+    const orb1 = ctx.createRadialGradient(size * 0.75, size * 0.2, 0, size * 0.75, size * 0.2, size * 0.45);
+    orb1.addColorStop(0, 'rgba(255, 100, 40, 0.12)');
+    orb1.addColorStop(0.5, 'rgba(180, 50, 20, 0.06)');
     orb1.addColorStop(1, 'transparent');
     ctx.fillStyle = orb1;
     ctx.fillRect(0, 0, size, size);
 
-    // Cool orb: center-left (soft blue/lavender)
-    const orb2 = ctx.createRadialGradient(size * 0.2, size * 0.55, 0, size * 0.2, size * 0.55, size * 0.35);
-    orb2.addColorStop(0, 'rgba(130, 140, 255, 0.10)');
+    // Cool nebula: center-left (deep blue/indigo)
+    const orb2 = ctx.createRadialGradient(size * 0.15, size * 0.55, 0, size * 0.15, size * 0.55, size * 0.4);
+    orb2.addColorStop(0, 'rgba(60, 60, 200, 0.1)');
+    orb2.addColorStop(0.5, 'rgba(30, 20, 120, 0.05)');
     orb2.addColorStop(1, 'transparent');
     ctx.fillStyle = orb2;
     ctx.fillRect(0, 0, size, size);
 
-    // Pink orb: bottom-right
-    const orb3 = ctx.createRadialGradient(size * 0.7, size * 0.8, 0, size * 0.7, size * 0.8, size * 0.3);
-    orb3.addColorStop(0, 'rgba(255, 100, 150, 0.08)');
+    // Purple nebula: bottom-center
+    const orb3 = ctx.createRadialGradient(size * 0.5, size * 0.85, 0, size * 0.5, size * 0.85, size * 0.35);
+    orb3.addColorStop(0, 'rgba(120, 40, 180, 0.08)');
+    orb3.addColorStop(0.6, 'rgba(80, 20, 140, 0.04)');
     orb3.addColorStop(1, 'transparent');
     ctx.fillStyle = orb3;
     ctx.fillRect(0, 0, size, size);
 
-    // Mint orb: top-left
-    const orb4 = ctx.createRadialGradient(size * 0.1, size * 0.25, 0, size * 0.1, size * 0.25, size * 0.25);
-    orb4.addColorStop(0, 'rgba(100, 220, 200, 0.07)');
+    // Teal accent: top-left
+    const orb4 = ctx.createRadialGradient(size * 0.1, size * 0.15, 0, size * 0.1, size * 0.15, size * 0.3);
+    orb4.addColorStop(0, 'rgba(40, 180, 180, 0.06)');
     orb4.addColorStop(1, 'transparent');
     ctx.fillStyle = orb4;
     ctx.fillRect(0, 0, size, size);
@@ -232,7 +235,7 @@ function createEnvMap() {
 }
 
 function createParticles(scene) {
-    const dustCount = 250;
+    const dustCount = 350;
     const dustPositions = new Float32Array(dustCount * 3);
     for (let i = 0; i < dustCount; i++) {
         dustPositions[i * 3] = (Math.random() - 0.5) * 14;
@@ -242,16 +245,16 @@ function createParticles(scene) {
     const dustGeom = new THREE.BufferGeometry();
     dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
     const dustMat = new THREE.PointsMaterial({
-        color: 0x888899,
-        size: 0.015,
+        color: 0x8888cc,
+        size: 0.018,
         transparent: true,
-        opacity: 0.2,
+        opacity: 0.4,
         sizeAttenuation: true,
     });
     const dust = new THREE.Points(dustGeom, dustMat);
     scene.add(dust);
 
-    const accentCount = 60;
+    const accentCount = 80;
     const accentPositions = new Float32Array(accentCount * 3);
     for (let i = 0; i < accentCount; i++) {
         accentPositions[i * 3] = (Math.random() - 0.5) * 16;
@@ -262,9 +265,9 @@ function createParticles(scene) {
     accentGeom.setAttribute('position', new THREE.BufferAttribute(accentPositions, 3));
     const accentMat = new THREE.PointsMaterial({
         color: 0xff6b35,
-        size: 0.03,
+        size: 0.04,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.5,
         sizeAttenuation: true,
     });
     const accent = new THREE.Points(accentGeom, accentMat);
@@ -275,12 +278,13 @@ function createParticles(scene) {
 }
 
 function createGlowOrbs(scene) {
-    const orbGeom = new THREE.SphereGeometry(0.5, 12, 12);
+    const orbGeom = new THREE.SphereGeometry(0.5, 16, 16);
     const orbs = [
-        { pos: [-5, 2, -7], color: 0xff6b35, opacity: 0.03, scale: 2.5 },
-        { pos: [5, -1, -9], color: 0x6666ff, opacity: 0.02, scale: 3.5 },
-        { pos: [-2, -3, -6], color: 0xffaa00, opacity: 0.02, scale: 2 },
-        { pos: [3, 3, -8], color: 0xff3366, opacity: 0.02, scale: 3 },
+        { pos: [-5, 2, -7], color: 0xff6b35, opacity: 0.06, scale: 3 },
+        { pos: [5, -1, -9], color: 0x4444ff, opacity: 0.05, scale: 4 },
+        { pos: [-2, -3, -6], color: 0xff8800, opacity: 0.04, scale: 2.5 },
+        { pos: [3, 3, -8], color: 0x8833cc, opacity: 0.04, scale: 3.5 },
+        { pos: [0, -4, -10], color: 0x2266aa, opacity: 0.03, scale: 5 },
     ];
     orbs.forEach(({ pos, color, opacity, scale }) => {
         const mat = new THREE.MeshBasicMaterial({
@@ -289,6 +293,7 @@ function createGlowOrbs(scene) {
         const orb = new THREE.Mesh(orbGeom, mat);
         orb.position.set(...pos);
         orb.scale.setScalar(scale);
+        orb.userData.baseOpacity = opacity;
         scene.add(orb);
     });
 }
