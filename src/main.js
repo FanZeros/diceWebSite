@@ -326,6 +326,17 @@ function simulateBounce(t) {
     return Math.abs(Math.sin(frequency)) * decay;
 }
 
+// Shortest-angle lerp: interpolates toward target via the shortest rotational
+// path (wraps difference into [-PI, PI]). Avoids "unwinding" large accumulated
+// rotations — the dice settles to a face without spinning multiple turns.
+const TWO_PI = Math.PI * 2;
+function lerpAngleShortest(current, target, t) {
+    let diff = (target - current) % TWO_PI;
+    if (diff > Math.PI) diff -= TWO_PI;
+    else if (diff < -Math.PI) diff += TWO_PI;
+    return current + diff * t;
+}
+
 function updateBackground(dt) {
     const [r, g, b] = getSectionColor(state.scroll, 'bg');
     scene.background.setRGB(r, g, b);
@@ -534,9 +545,20 @@ function updateDice(dt) {
     hero.position.x += (targetX - hero.position.x) * pl;
     hero.position.y += (targetY - hero.position.y) * pl;
     hero.position.z += (targetZ - hero.position.z) * pl;
-    hero.rotation.x += (rotX - hero.rotation.x) * rl;
-    hero.rotation.y += (rotY - hero.rotation.y) * rl;
-    hero.rotation.z += (rotZ - hero.rotation.z) * rl;
+
+    // Rotation interpolation:
+    // - Stage 1-2 (section < 2): raw lerp → allows multi-turn tumbling during throw
+    // - Stage 3+ (section >= 2): shortest-angle lerp → settles to face quickly
+    //   without "unwinding" the accumulated throw rotation (no fast spin)
+    if (section < 2) {
+        hero.rotation.x += (rotX - hero.rotation.x) * rl;
+        hero.rotation.y += (rotY - hero.rotation.y) * rl;
+        hero.rotation.z += (rotZ - hero.rotation.z) * rl;
+    } else {
+        hero.rotation.x = lerpAngleShortest(hero.rotation.x, rotX, rl);
+        hero.rotation.y = lerpAngleShortest(hero.rotation.y, rotY, rl);
+        hero.rotation.z = lerpAngleShortest(hero.rotation.z, rotZ, rl);
+    }
     const cs = hero.scale.x;
     hero.scale.setScalar(cs + (targetScale - cs) * flerp(0.035, dt));
 
