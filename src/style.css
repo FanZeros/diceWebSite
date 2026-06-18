@@ -93,6 +93,7 @@ body.loaded #webgl {
     justify-content: center;
     padding: 5rem 2.5rem;
     scroll-snap-align: start;
+    perspective: 1200px;
 }
 
 .section-content {
@@ -102,9 +103,9 @@ body.loaded #webgl {
     position: relative;
     padding: 2.5rem 2rem;
     border-radius: 24px;
-    background: rgba(10, 10, 20, 0.5);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(10, 10, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 /* ===== Hero Section ===== */

@@ -43,9 +43,8 @@ export function initScrollAnimations(container, state) {
         gsap.set(content, {
             rotateY: startRotation,
             opacity: 0,
-            z: -200, // starts far away
+            z: -200,
             transformOrigin: 'center center',
-            transformPerspective: 1000,
         });
 
         // Scroll-driven: rotates around Y-axis from side/back → facing viewer
