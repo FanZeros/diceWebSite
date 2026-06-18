@@ -103,38 +103,4 @@ export function initTextAnimations(container) {
     }
 }
 
-/**
- * Section title: tighter DNA helix reveal (triggered on scroll)
- */
-export function spiralRevealSection(element) {
-    if (!element || element.dataset.spiralDone) return;
-    element.dataset.spiralDone = '1';
 
-    const chars = splitChars(element);
-
-    chars.forEach((char, i) => {
-        const total = chars.length;
-        const t = i / Math.max(total - 1, 1);
-        const turns = 1.5;
-        const angle = t * Math.PI * 2 * turns;
-
-        gsap.set(char, {
-            x: Math.sin(angle) * 50,
-            y: (t - 0.5) * 200,
-            rotateZ: angle * (180 / Math.PI) * 0.6,
-            scale: 0.5 + Math.cos(angle) * 0.2,
-            opacity: 0,
-        });
-    });
-
-    gsap.to(chars, {
-        x: 0,
-        y: 0,
-        rotateZ: 0,
-        scale: 1,
-        opacity: 1,
-        duration: 1.2,
-        stagger: 0.025,
-        ease: 'power2.inOut',
-    });
-}

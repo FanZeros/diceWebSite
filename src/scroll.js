@@ -1,6 +1,5 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { spiralRevealSection } from './text.js';
 
 export function initScrollAnimations(container, state) {
     ScrollTrigger.defaults({
@@ -24,17 +23,46 @@ export function initScrollAnimations(container, state) {
         },
     });
 
-    // Animate each section's content
+    // Animate each section's content — DNA helix Z-axis rotation
     const sections = container.querySelectorAll('.section');
 
-    sections.forEach((section) => {
-        const title = section.querySelector('.section-title');
-        const desc = section.querySelector('.section-desc');
-        const badges = section.querySelector('.feature-badges');
-        const buttons = section.querySelector('.cta-buttons');
+    sections.forEach((section, sectionIndex) => {
+        const content = section.querySelector('.section-content') || section.querySelector('.hero-content');
         const cards = section.querySelectorAll('.feature-card');
 
-        // Feature cards staggered reveal (animate CSS var so parallax composes)
+        if (!content) return;
+
+        // Skip hero section (has its own char-level animation)
+        if (section.classList.contains('section-hero')) return;
+
+        // DNA helix: entire text block rotates around Z-axis into view
+        // Alternating direction like DNA base-pairs
+        const direction = sectionIndex % 2 === 0 ? 1 : -1;
+        const startRotation = direction * 90; // ±90° start
+
+        gsap.set(content, {
+            rotateZ: startRotation,
+            opacity: 0,
+            scale: 0.7,
+            transformOrigin: 'center center',
+        });
+
+        // Scroll-driven rotation: scrub from rotated → flat
+        gsap.to(content, {
+            rotateZ: 0,
+            opacity: 1,
+            scale: 1,
+            ease: 'power2.out',
+            scrollTrigger: {
+                trigger: section,
+                scroller: container,
+                start: 'top 85%',
+                end: 'top 35%',
+                scrub: 0.8, // tied to scroll position
+            },
+        });
+
+        // Feature cards staggered reveal
         if (cards.length > 0) {
             gsap.to(cards, {
                 opacity: 1,
@@ -45,59 +73,11 @@ export function initScrollAnimations(container, state) {
                 scrollTrigger: {
                     trigger: section,
                     scroller: container,
-                    start: 'top 60%',
+                    start: 'top 50%',
                     end: 'top 20%',
                     toggleActions: 'play none none reverse',
                 },
             });
-        }
-
-        // Spiral reveal for section title (Active Theory style)
-        if (title) {
-            ScrollTrigger.create({
-                trigger: section,
-                scroller: container,
-                start: 'top 70%',
-                onEnter: () => spiralRevealSection(title),
-                once: true,
-            });
-        }
-
-        const tl = gsap.timeline({
-            scrollTrigger: {
-                trigger: section,
-                scroller: container,
-                start: 'top 75%',
-                end: 'top 20%',
-                toggleActions: 'play none none reverse',
-            },
-        });
-
-        if (desc) {
-            tl.to(desc, {
-                opacity: 1,
-                y: 0,
-                duration: 0.9,
-                ease: 'power3.out',
-            }, 0.3);
-        }
-
-        if (badges) {
-            tl.to(badges, {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: 'power3.out',
-            }, 0.5);
-        }
-
-        if (buttons) {
-            tl.to(buttons, {
-                opacity: 1,
-                y: 0,
-                duration: 0.8,
-                ease: 'power3.out',
-            }, 0.55);
         }
     });
 

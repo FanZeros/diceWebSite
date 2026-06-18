@@ -195,12 +195,7 @@ body.loaded #webgl {
     margin-bottom: 1.2rem;
     letter-spacing: -0.02em;
     line-height: 1.1;
-    perspective: 800px;
     text-shadow: 0 0 40px rgba(255, 107, 53, 0.1);
-}
-
-.section-title .char {
-    text-shadow: 0 0 20px rgba(255, 107, 53, 0.15);
 }
 
 .section-desc {
@@ -208,8 +203,6 @@ body.loaded #webgl {
     line-height: 2;
     color: rgba(255, 255, 255, 0.7);
     font-weight: 400;
-    opacity: 0;
-    transform: translateY(30px);
     letter-spacing: 0.02em;
 }
 
@@ -258,8 +251,6 @@ body.loaded #webgl {
     justify-content: center;
     flex-wrap: wrap;
     margin-top: 1.5rem;
-    opacity: 0;
-    transform: translateY(20px);
 }
 .badge {
     padding: 0.4rem 1rem;
@@ -344,8 +335,6 @@ body.loaded #webgl {
     gap: 1.2rem;
     justify-content: center;
     margin-top: 2.5rem;
-    opacity: 0;
-    transform: translateY(20px);
 }
 
 .btn {
