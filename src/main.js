@@ -355,11 +355,8 @@ function lerpAngleShortest(current, target, t) {
 }
 
 function updateBackground(dt) {
-    const [r, g, b] = getSectionColor(state.scroll, 'bg');
-    scene.background.setRGB(r, g, b);
-    scene.fog.color.setRGB(r, g, b);
-
-    // Update rim light color to match section accent
+    // Canvas is transparent — CSS handles the layered gradient background.
+    // We only animate the rim light color to match section accent.
     if (lights && lights.rim) {
         const [ar, ag, ab] = getSectionColor(state.scroll, 'accent');
         lights.rim.color.setRGB(ar, ag, ab);

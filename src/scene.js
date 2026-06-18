@@ -19,9 +19,10 @@ export function initScene(canvas, state) {
     const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        alpha: false,
+        alpha: true,  // transparent — CSS gradient shows through
         powerPreference: 'high-performance',
     });
+    renderer.setClearColor(0x000000, 0); // fully transparent clear
     renderer.setSize(state.width, state.height);
     renderer.setPixelRatio(state.dpr);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -29,8 +30,10 @@ export function initScene(canvas, state) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f5f8);
-    scene.fog = new THREE.FogExp2(0xf5f5f8, 0.04);
+    // No background — transparent canvas lets CSS gradient show through
+    scene.background = null;
+    // Very subtle fog for depth (uses neutral color that blends with CSS bg)
+    scene.fog = new THREE.FogExp2(0xf0f0f4, 0.025);
 
     const camera = new THREE.PerspectiveCamera(40, state.width / state.height, 0.1, 100);
     camera.position.set(0, 0, 7);
