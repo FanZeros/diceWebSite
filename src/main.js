@@ -470,10 +470,10 @@ function updateDice(dt) {
             targetY = -0.2 + easeOut * 1.0; // arcs upward
             targetX = easeOut * 0.5; // slight rightward drift
             targetScale = 1.4 - easeOut * 0.5;
-            // Aggressive spin during launch
-            rotX = lt * Math.PI * 3;
-            rotY = lt * Math.PI * 4;
-            rotZ = lt * Math.PI * 1.5;
+            // Controlled spin during launch (~1 turn)
+            rotX = lt * Math.PI * 1.2;
+            rotY = lt * Math.PI * 1.5;
+            rotZ = lt * Math.PI * 0.4;
         } else if (throwT < 0.85) {
             // Flight: parabolic arc with continued spin
             phase = 'flight';
@@ -483,11 +483,11 @@ function updateDice(dt) {
             targetY = 0.8 + parabola * 0.8 - ft * 1.2; // arc then descend
             targetX = 0.5 + ft * 0.3;
             targetScale = 0.9;
-            // Spin continues but decelerates
-            const spinDecay = 1 - ft * 0.5;
-            rotX = Math.PI * 3 + ft * Math.PI * 2 * spinDecay;
-            rotY = Math.PI * 4 + ft * Math.PI * 2.5 * spinDecay;
-            rotZ = Math.PI * 1.5 + ft * Math.PI * spinDecay;
+            // Spin continues but decelerates (limited total rotation)
+            const spinDecay = 1 - ft * 0.6;
+            rotX = Math.PI * 1.2 + ft * Math.PI * 0.8 * spinDecay;
+            rotY = Math.PI * 1.5 + ft * Math.PI * 1.0 * spinDecay;
+            rotZ = Math.PI * 0.4 + ft * Math.PI * 0.3 * spinDecay;
         } else {
             // Deceleration: approaching landing
             phase = 'decel';
@@ -497,10 +497,10 @@ function updateDice(dt) {
             targetY = -0.4 + simulateBounce(dt2) * 0.3; // small bounce
             targetX = 0.8 - easeIn * 0.8; // returns to center
             targetScale = 0.9 - easeIn * 0.1;
-            // Spin nearly stops
-            rotX = Math.PI * 5 + dt2 * 0.3;
-            rotY = Math.PI * 6.5 + dt2 * 0.2;
-            rotZ = Math.PI * 2.5;
+            // Spin settles smoothly
+            rotX = Math.PI * 2.0 + dt2 * 0.15;
+            rotY = Math.PI * 2.5 + dt2 * 0.1;
+            rotZ = Math.PI * 0.7;
         }
 
     } else if (section < 3) {
