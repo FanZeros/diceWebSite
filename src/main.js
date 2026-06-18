@@ -483,24 +483,25 @@ function updateDice(dt) {
         }
 
     } else if (section < 3) {
-        // ===== STAGE 3: LANDING & ARRANGEMENT =====
-        // Hero dice settles, collection dice appear one by one showing faces
+        // ===== STAGE 3: COLLECTION — hero exits, small dice perform =====
+        // Hero quickly shrinks to nothing so the collection dice are the stars
         const landT = section - 2; // 0→1
+        const exit = Math.min(1, landT * 3); // shrink out in first 1/3
 
-        // Hero shrinks and moves aside
-        targetX = -2.0 * Math.min(1, landT * 2);
+        targetX = 0;
         targetY = -0.3;
         targetZ = -0.5;
-        targetScale = 0.5 + (1 - Math.min(1, landT * 2)) * 0.3;
-        // Lock to a specific face (show "6" — flat rotation)
+        targetScale = 0.6 * (1 - exit); // → 0 (hidden)
+        // Settle to a face while shrinking
         rotX = Math.PI * 0.5;
         rotY = 0;
         rotZ = 0;
 
     } else if (section < 4) {
-        // COMBO: Orbiters surround hero
+        // COMBO: hero re-enters, orbiters surround it
+        const comboIn = Math.min(1, (section - 3) * 3); // grow back in
         targetX = 0;
-        targetScale = 0.8;
+        targetScale = 0.8 * comboIn;
         targetY = 0.1;
         rotX = Math.PI * 0.2 + Math.sin(time * 0.3) * 0.06;
         rotY = time * 0.08;
@@ -560,7 +561,10 @@ function updateDice(dt) {
         hero.rotation.z = lerpAngleShortest(hero.rotation.z, rotZ, rl);
     }
     const cs = hero.scale.x;
-    hero.scale.setScalar(cs + (targetScale - cs) * flerp(0.035, dt));
+    hero.scale.setScalar(cs + (targetScale - cs) * flerp(0.06, dt));
+
+    // Hide hero entirely when it shrinks out (Collection section) to avoid a lingering speck
+    hero.visible = hero.scale.x > 0.04;
 
     // Hero inner glow pulse
     const heroLight = hero.children.find(c => c.isPointLight);
@@ -587,37 +591,52 @@ function updateDice(dt) {
         { x: Math.PI / 4, y: Math.PI / 4, z: 0 },// bonus (tilted)
     ];
 
+    // Centered showcase layout: 4 dice top row + 3 dice bottom row
+    const topRow = [0, 1, 2, 3];
+    const botRow = [4, 5, 6];
+    const layout = [];
+    topRow.forEach((idx, k) => layout[idx] = { col: k, row: 0, cols: 4 });
+    botRow.forEach((idx, k) => layout[idx] = { col: k, row: 1, cols: 3 });
+
     collection.forEach((cd, i) => {
         cd.visible = landAlpha > 0.01;
         if (!cd.visible) return;
 
         // Staggered entrance: each die arrives slightly later
-        const stagger = i * 0.08;
+        const stagger = i * 0.07;
         const dieAlpha = Math.max(0, Math.min(1, (landAlpha - stagger) / (1 - stagger)));
         const easeAlpha = 1 - (1 - dieAlpha) * (1 - dieAlpha); // ease out
 
-        // Arrange in a row
-        const spacing = 0.65;
-        const rowWidth = (collection.length - 1) * spacing;
-        const targetDieX = (i * spacing - rowWidth / 2);
-        const targetDieY = -0.3;
+        // Grid position (centered)
+        const lay = layout[i];
+        const hSpacing = 0.95;
+        const vSpacing = 0.95;
+        const targetDieX = (lay.col - (lay.cols - 1) / 2) * hSpacing;
+        const targetDieY = 0.35 - lay.row * vSpacing; // centered around screen middle
 
-        // Entry: fall from above + bounce
-        const entryY = targetDieY + (1 - easeAlpha) * 3.0; // fall from high
-        const bounceOffset = easeAlpha > 0.8 ? simulateBounce((easeAlpha - 0.8) / 0.2) * 0.15 : 0;
+        // Entry: fall from above + settle bounce
+        const entryY = targetDieY + (1 - easeAlpha) * 3.5;
+        const bounceOffset = easeAlpha > 0.8 ? simulateBounce((easeAlpha - 0.8) / 0.2) * 0.18 : 0;
 
-        cd.position.x = targetDieX * easeAlpha;
-        cd.position.y = entryY + bounceOffset;
+        // Post-landing idle "performance": gentle float + bob (only when settled)
+        const settled = easeAlpha > 0.95 ? 1 : 0;
+        const floatY = settled * Math.sin(time * 1.2 + i * 0.9) * 0.06;
+        const floatX = settled * Math.cos(time * 0.8 + i * 1.3) * 0.03;
+
+        cd.position.x = targetDieX * easeAlpha + floatX;
+        cd.position.y = entryY + bounceOffset + floatY;
         cd.position.z = -0.5;
 
-        // Rotation: spin during entry, snap to face when landed
+        // Rotation: spin fast during entry → settle to face → gentle idle spin
         const face = faceRotations[i % faceRotations.length];
         const spinFactor = 1 - easeAlpha;
+        const idleSpin = settled * time * (0.2 + (i % 3) * 0.08);
         cd.rotation.x = face.x + spinFactor * Math.PI * 4 * (1 + i * 0.3);
-        cd.rotation.y = face.y + spinFactor * Math.PI * 3;
+        cd.rotation.y = face.y + spinFactor * Math.PI * 3 + idleSpin;
         cd.rotation.z = face.z + spinFactor * 0.5;
 
-        cd.scale.setScalar(0.45 * easeAlpha);
+        // Bigger — these are the stars of this section
+        cd.scale.setScalar(0.62 * easeAlpha);
     });
 
     // ===== Orbiters (Combo section) =====
