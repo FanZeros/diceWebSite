@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { spiralRevealSection } from './text.js';
 
 export function initScrollAnimations(container, state) {
     ScrollTrigger.defaults({
@@ -51,6 +52,17 @@ export function initScrollAnimations(container, state) {
             });
         }
 
+        // Spiral reveal for section title (Active Theory style)
+        if (title) {
+            ScrollTrigger.create({
+                trigger: section,
+                scroller: container,
+                start: 'top 70%',
+                onEnter: () => spiralRevealSection(title),
+                once: true,
+            });
+        }
+
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: section,
@@ -61,22 +73,13 @@ export function initScrollAnimations(container, state) {
             },
         });
 
-        if (title) {
-            tl.to(title, {
-                opacity: 1,
-                y: 0,
-                duration: 0.9,
-                ease: 'power3.out',
-            }, 0);
-        }
-
         if (desc) {
             tl.to(desc, {
                 opacity: 1,
                 y: 0,
                 duration: 0.9,
                 ease: 'power3.out',
-            }, 0.15);
+            }, 0.3);
         }
 
         if (badges) {
@@ -85,7 +88,7 @@ export function initScrollAnimations(container, state) {
                 y: 0,
                 duration: 0.8,
                 ease: 'power3.out',
-            }, 0.3);
+            }, 0.5);
         }
 
         if (buttons) {
@@ -94,7 +97,7 @@ export function initScrollAnimations(container, state) {
                 y: 0,
                 duration: 0.8,
                 ease: 'power3.out',
-            }, 0.35);
+            }, 0.55);
         }
     });
 

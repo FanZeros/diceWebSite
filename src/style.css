@@ -125,18 +125,18 @@ body.loaded #webgl {
     letter-spacing: -0.04em;
     margin-bottom: 1.5rem;
     text-shadow: 0 0 60px rgba(255, 107, 53, 0.15);
+    perspective: 1000px;
 }
 
 .hero-title .line {
     display: block;
     opacity: 0;
-    transform: translateY(80px);
-    background: linear-gradient(160deg, #ffffff 0%, #f0eeff 50%, var(--color-accent) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 2px 8px rgba(255, 107, 53, 0.2));
+    color: #ffffff;
+}
+
+.hero-title .line .char {
+    color: #ffffff;
+    text-shadow: 0 0 20px rgba(255, 107, 53, 0.3), 0 0 60px rgba(255, 107, 53, 0.1);
 }
 
 .hero-subtitle {
@@ -195,9 +195,12 @@ body.loaded #webgl {
     margin-bottom: 1.2rem;
     letter-spacing: -0.02em;
     line-height: 1.1;
-    opacity: 0;
-    transform: translateY(50px);
+    perspective: 800px;
     text-shadow: 0 0 40px rgba(255, 107, 53, 0.1);
+}
+
+.section-title .char {
+    text-shadow: 0 0 20px rgba(255, 107, 53, 0.15);
 }
 
 .section-desc {
