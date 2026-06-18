@@ -47,35 +47,20 @@ const state = {
 const canvas = document.getElementById('webgl');
 const scrollContainer = document.getElementById('scroll-container');
 
-// Wait for fonts (GameFont needed for Canvas dice textures), then init scene
-let scene, camera, renderer, dice, particles, lights, trail, shockwave, composer;
+// Scene setup
+const { scene, camera, renderer, dice, particles, lights, trail, shockwave } = initScene(canvas, state);
+const composer = initPostProcessing(renderer, scene, camera, state);
 
-async function initApp() {
-    // Ensure GameFont is loaded before creating dice textures
-    await document.fonts.ready;
+// Scroll & Text animations
+initScrollAnimations(scrollContainer, state);
+initTextAnimations(scrollContainer);
 
-    const sceneData = initScene(canvas, state);
-    scene = sceneData.scene;
-    camera = sceneData.camera;
-    renderer = sceneData.renderer;
-    dice = sceneData.dice;
-    particles = sceneData.particles;
-    lights = sceneData.lights;
-    trail = sceneData.trail;
-    shockwave = sceneData.shockwave;
-    composer = initPostProcessing(renderer, scene, camera, state);
-
-    // Scroll & Text animations
-    initScrollAnimations(scrollContainer, state);
-    initTextAnimations(scrollContainer);
-
+// Start
+window.addEventListener('load', () => {
     state.loaded = true;
     document.body.classList.add('loaded');
-
-    // Start render loop
-    animate();
-}
-initApp();
+});
+animate();
 
 // ===== Nav dots =====
 const navDots = document.querySelectorAll('.nav-dot');

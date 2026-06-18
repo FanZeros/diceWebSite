@@ -19,10 +19,9 @@ export function initScene(canvas, state) {
     const renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        alpha: true,  // transparent — CSS gradient shows through
+        alpha: false,
         powerPreference: 'high-performance',
     });
-    renderer.setClearColor(0x000000, 0); // fully transparent clear
     renderer.setSize(state.width, state.height);
     renderer.setPixelRatio(state.dpr);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -30,10 +29,9 @@ export function initScene(canvas, state) {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    // No background — transparent canvas lets CSS gradient show through
-    scene.background = null;
-    // Very subtle fog for depth (uses neutral color that blends with CSS bg)
-    scene.fog = new THREE.FogExp2(0xf0f0f4, 0.025);
+    // Layered gradient background texture (depth through color, not flat)
+    scene.background = createGradientBackground();
+    scene.fog = new THREE.FogExp2(0xf0eef5, 0.025);
 
     const camera = new THREE.PerspectiveCamera(40, state.width / state.height, 0.1, 100);
     camera.position.set(0, 0, 7);
@@ -149,6 +147,56 @@ function createSingleDice(size, style, envMap, useBeveled = false) {
 
     dice.userData.style = style;
     return dice;
+}
+
+function createGradientBackground() {
+    // Layered gradient background — multiple soft color orbs for depth
+    const size = 1024;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Base: warm off-white gradient (top) → cool lavender (bottom)
+    const base = ctx.createLinearGradient(0, 0, 0, size);
+    base.addColorStop(0, '#faf8f5');
+    base.addColorStop(0.35, '#f5f3f8');
+    base.addColorStop(0.65, '#f0eef6');
+    base.addColorStop(1, '#f5f2f0');
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, size, size);
+
+    // Warm orb: top-right (soft peach/amber)
+    const orb1 = ctx.createRadialGradient(size * 0.75, size * 0.15, 0, size * 0.75, size * 0.15, size * 0.4);
+    orb1.addColorStop(0, 'rgba(255, 180, 100, 0.18)');
+    orb1.addColorStop(1, 'transparent');
+    ctx.fillStyle = orb1;
+    ctx.fillRect(0, 0, size, size);
+
+    // Cool orb: center-left (soft blue/lavender)
+    const orb2 = ctx.createRadialGradient(size * 0.2, size * 0.55, 0, size * 0.2, size * 0.55, size * 0.35);
+    orb2.addColorStop(0, 'rgba(130, 140, 255, 0.10)');
+    orb2.addColorStop(1, 'transparent');
+    ctx.fillStyle = orb2;
+    ctx.fillRect(0, 0, size, size);
+
+    // Pink orb: bottom-right
+    const orb3 = ctx.createRadialGradient(size * 0.7, size * 0.8, 0, size * 0.7, size * 0.8, size * 0.3);
+    orb3.addColorStop(0, 'rgba(255, 100, 150, 0.08)');
+    orb3.addColorStop(1, 'transparent');
+    ctx.fillStyle = orb3;
+    ctx.fillRect(0, 0, size, size);
+
+    // Mint orb: top-left
+    const orb4 = ctx.createRadialGradient(size * 0.1, size * 0.25, 0, size * 0.1, size * 0.25, size * 0.25);
+    orb4.addColorStop(0, 'rgba(100, 220, 200, 0.07)');
+    orb4.addColorStop(1, 'transparent');
+    ctx.fillStyle = orb4;
+    ctx.fillRect(0, 0, size, size);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
 }
 
 function createEnvMap() {
