@@ -37,10 +37,10 @@ const state = {
         lastY: 0,
         velX: 0,
         velY: 0,
-        offsetX: 0,  // accumulated drag rotation
-        offsetY: 0,
     },
-    prevSection: 0,  // for detecting stage transitions (landing impact)
+    // Persistent hero spin accumulators (continuous, no jumps)
+    spinX: 0,
+    spinY: 0,
 };
 
 // ===== Init =====
@@ -139,11 +139,11 @@ function onDragMove(clientX, clientY) {
     if (!state.drag.active) return;
     const dx = clientX - state.drag.lastX;
     const dy = clientY - state.drag.lastY;
-    // Convert pixel delta to rotation (radians)
+    // Convert pixel delta to rotation (radians) — feed directly into spin accumulator
     state.drag.velY = dx * 0.008;  // horizontal drag → Y rotation
     state.drag.velX = dy * 0.008;  // vertical drag → X rotation
-    state.drag.offsetY += state.drag.velY;
-    state.drag.offsetX += state.drag.velX;
+    state.spinY += state.drag.velY;
+    state.spinX += state.drag.velX;
     state.drag.lastX = clientX;
     state.drag.lastY = clientY;
 }
@@ -348,6 +348,14 @@ function updateDice(dt) {
     const orbiters = dice.userData.orbiters;
     const collection = dice.userData.collection;
 
+    // Decay spin accumulators toward 0 once past Stage 1 (avoids carryover into throw)
+    if (section >= 1 && !state.drag.active) {
+        state.spinX *= 0.9;
+        state.spinY *= 0.9;
+        state.drag.velX *= 0.9;
+        state.drag.velY *= 0.9;
+    }
+
     // ===== 3-STAGE CINEMATIC DICE ANIMATION =====
     //
     // Stage 1 (section 0-1): CLOSE-UP INSPECTION
@@ -376,19 +384,23 @@ function updateDice(dt) {
         targetY = Math.sin(time * 0.3) * 0.08;
         targetZ = 1.0 - inspectT * 0.5; // starts close to camera, eases back
 
-        // Rotation: drag-controlled + idle auto-rotation
-        const idleSpin = state.drag.active ? 0 : time * 0.1;
-        rotX = inspectT * Math.PI * 0.5 + state.drag.offsetX;
-        rotY = inspectT * Math.PI * 0.6 + idleSpin + state.drag.offsetY;
-        rotZ = Math.sin(time * 0.15) * 0.03;
-
-        // Apply drag inertia when released (velocity decays)
+        // Rotation: persistent spin accumulator (continuous, no jumps)
+        // — idle auto-spin OR drag both feed state.spinX/spinY smoothly
         if (!state.drag.active) {
-            state.drag.offsetY += state.drag.velY;
-            state.drag.offsetX += state.drag.velX;
-            state.drag.velX *= 0.94;  // friction
-            state.drag.velY *= 0.94;
+            // Gentle idle auto-rotation
+            state.spinY += dt * 0.25;
+            // Drag inertia (decays via friction)
+            state.spinY += state.drag.velY;
+            state.spinX += state.drag.velX;
+            state.drag.velX *= 0.92;
+            state.drag.velY *= 0.92;
         }
+        // Clamp X spin so dice doesn't flip endlessly vertically
+        state.spinX = Math.max(-1.2, Math.min(1.2, state.spinX));
+
+        rotX = inspectT * Math.PI * 0.5 + state.spinX;
+        rotY = inspectT * Math.PI * 0.6 + state.spinY;
+        rotZ = Math.sin(time * 0.15) * 0.03;
 
         // Mouse tilt (only when not dragging)
         if (!state.drag.active) {
@@ -499,15 +511,18 @@ function updateDice(dt) {
         rotZ = 0;
     }
 
-    // ===== Scroll velocity → rotation turbulence =====
-    const scrollVelocity = Math.abs(state.scrollTarget - state.scroll);
-    rotX += Math.sin(time * 5) * scrollVelocity * 1.2;
-    rotZ += Math.cos(time * 4) * scrollVelocity * 0.8;
+    // ===== Scroll velocity → subtle rotation turbulence (Stage 2 throw only) =====
+    if (section >= 1 && section < 2) {
+        const scrollVelocity = Math.abs(state.scrollTarget - state.scroll);
+        rotZ += Math.cos(time * 4) * scrollVelocity * 0.6;
+    }
 
-    // Mouse parallax (reduced during throw)
-    const mouseStrength = section >= 1 && section < 2 ? 0.05 : 0.15;
-    targetX += state.mouse.x * mouseStrength;
-    targetY += -state.mouse.y * mouseStrength * 0.7;
+    // Mouse parallax (skip in Stage 1 — handled above; reduced during throw)
+    if (section >= 1) {
+        const mouseStrength = section < 2 ? 0.05 : 0.15;
+        targetX += state.mouse.x * mouseStrength;
+        targetY += -state.mouse.y * mouseStrength * 0.7;
+    }
 
     // Apply to hero dice with smooth interpolation
     const pl = flerp(0.04, dt);
