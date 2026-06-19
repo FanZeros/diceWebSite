@@ -124,18 +124,15 @@ function updateSectionRotation() {
         const idx = parseInt(panel.dataset.sectionIdx);
         const dist = scrollPos - idx;
 
-        // Dead zone: panel stays at 0° (facing you) for a range around its focus
-        const deadZone = 0.35; // stay centered for ±35% of section scroll
-        const absDist = Math.abs(dist);
-        const effectiveDist = absDist > deadZone
-            ? Math.sign(dist) * (absDist - deadZone)
-            : 0;
+        // Smooth ease: rotation slows near center but never stops
+        // Uses a cubic curve — fast at edges, gentle through center
+        const sign = Math.sign(dist);
+        const abs = Math.abs(dist);
+        const curved = abs * abs * (3 - 2 * abs); // smoothstep-like: slow in middle, fast at edges
+        const rotY = sign * curved * 70;
 
-        const rotY = effectiveDist * 70;
-        // Opacity: full within dead zone, fades when rotating away
-        const opacity = absDist < deadZone
-            ? 1
-            : Math.max(0, 1 - (absDist - deadZone) * 0.9);
+        // Opacity: smooth fade based on distance
+        const opacity = Math.max(0, 1 - abs * 0.5);
 
         panel.style.transform = `rotateY(${rotY}deg)`;
         panel.style.opacity = opacity;
