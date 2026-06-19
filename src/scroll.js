@@ -39,27 +39,28 @@ export function initScrollAnimations(container, state) {
         // Like a revolving door — panel is parallel to Y-axis, rotates around it at a distance
         const direction = sectionIndex % 2 === 0 ? 1 : -1;
         const startRotation = direction * 70;
-        const orbitRadius = 600; // distance from panel to the Y-axis pivot
+        const orbitRadius = 500;
 
-        gsap.set(content, {
-            rotateY: startRotation,
-            opacity: 0,
-            transformOrigin: `50% 50% -${orbitRadius}px`, // pivot is behind the element
-        });
-
-        // Scroll-driven: panel orbits from the side into face-on position
-        gsap.to(content, {
-            rotateY: 0,
-            opacity: 1,
-            ease: 'none',
-            scrollTrigger: {
-                trigger: section,
-                scroller: container,
-                start: 'top 90%',
-                end: 'top 40%',
-                scrub: 0.6,
+        gsap.fromTo(content,
+            {
+                rotateY: startRotation,
+                opacity: 0,
+                transformOrigin: `50% 50% -${orbitRadius}px`,
             },
-        });
+            {
+                rotateY: 0,
+                opacity: 1,
+                transformOrigin: `50% 50% -${orbitRadius}px`,
+                duration: 1.4,
+                ease: 'power2.out',
+                scrollTrigger: {
+                    trigger: section,
+                    scroller: container,
+                    start: 'top 80%',
+                    toggleActions: 'play none none reverse',
+                },
+            }
+        );
 
         // Feature cards staggered reveal
         if (cards.length > 0) {
