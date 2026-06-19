@@ -35,30 +35,29 @@ export function initScrollAnimations(container, state) {
         // Skip hero section (has its own char-level animation)
         if (section.classList.contains('section-hero')) return;
 
-        // DNA helix: entire text block rotates around Y-axis from far to near
-        // Alternating direction like DNA base-pairs
+        // Carousel: text panel orbits around Y-axis (pivot behind the panel)
+        // Like a revolving door — panel is parallel to Y-axis, rotates around it at a distance
         const direction = sectionIndex % 2 === 0 ? 1 : -1;
-        const startRotation = direction * 90; // ±90° around Y
+        const startRotation = direction * 70;
+        const orbitRadius = 600; // distance from panel to the Y-axis pivot
 
         gsap.set(content, {
             rotateY: startRotation,
             opacity: 0,
-            z: -200,
-            transformOrigin: 'center center',
+            transformOrigin: `50% 50% -${orbitRadius}px`, // pivot is behind the element
         });
 
-        // Scroll-driven: rotates around Y-axis from side/back → facing viewer
+        // Scroll-driven: panel orbits from the side into face-on position
         gsap.to(content, {
             rotateY: 0,
             opacity: 1,
-            z: 0,
-            ease: 'power2.out',
+            ease: 'none',
             scrollTrigger: {
                 trigger: section,
                 scroller: container,
-                start: 'top 85%',
-                end: 'top 35%',
-                scrub: 0.8,
+                start: 'top 90%',
+                end: 'top 40%',
+                scrub: 0.6,
             },
         });
 
