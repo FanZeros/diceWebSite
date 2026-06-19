@@ -126,7 +126,7 @@ function updateSectionRotation() {
         const dist = scrollPos - idx;
         // DNA helix: all panels rotate in the same direction, slow and continuous
         // Rotation accumulates with scroll — like riding along a DNA strand
-        const rotY = dist * 25; // slower rotation (25° per section distance)
+        const rotY = dist * 70;
         // Opacity: fully visible near focus, fades when far
         const opacity = Math.max(0, 1 - Math.abs(dist) * 0.6);
 
