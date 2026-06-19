@@ -125,17 +125,34 @@ function updateSectionRotation() {
         const dist = scrollPos - idx;
 
         // Smooth ease: rotation slows near center but never stops
-        // Uses a cubic curve — fast at edges, gentle through center
         const sign = Math.sign(dist);
         const abs = Math.abs(dist);
-        const curved = abs * abs * (3 - 2 * abs); // smoothstep-like: slow in middle, fast at edges
+        const curved = abs * abs * (3 - 2 * abs);
         const rotY = sign * curved * 70;
 
-        // Opacity: smooth fade based on distance
+        // Mouse-driven micro tilt (only when near focus)
+        const focus = Math.max(0, 1 - abs * 1.5); // 1 at center, 0 when far
+        const tiltX = state.mouse.y * -3 * focus; // subtle vertical tilt
+        const tiltY = state.mouse.x * 4 * focus;  // subtle horizontal tilt (adds to rotY)
+        const translateZ = focus * 20; // pull forward when focused
+
+        // Motion blur: slight blur when rotating fast
+        const blur = Math.min(3, abs * 2);
+
+        // Opacity
         const opacity = Math.max(0, 1 - abs * 0.5);
 
-        panel.style.transform = `rotateY(${rotY}deg)`;
+        // Glow border: accent glow when panel is in focus
+        const glowIntensity = focus * 0.6;
+        const glowColor = `rgba(255, 107, 53, ${glowIntensity})`;
+
+        panel.style.transform = `rotateY(${rotY + tiltY}deg) rotateX(${tiltX}deg) translateZ(${translateZ}px)`;
         panel.style.opacity = opacity;
+        panel.style.filter = blur > 0.3 ? `blur(${blur}px)` : 'none';
+        panel.style.boxShadow = glowIntensity > 0.05
+            ? `0 0 ${20 + focus * 30}px ${glowColor}, 0 8px 32px rgba(0,0,0,0.4), inset 0 0 ${focus * 15}px rgba(255,107,53,${glowIntensity * 0.2})`
+            : '0 8px 32px rgba(0,0,0,0.4)';
+        panel.style.borderColor = `rgba(255, 107, 53, ${glowIntensity * 0.5})`;
     });
 }
 
@@ -371,23 +388,33 @@ function lerpAngleShortest(current, target, t) {
 }
 
 function updateBackground(dt) {
+    const [ar, ag, ab] = getSectionColor(state.scroll, 'accent');
+
     // Animate rim light color to match section accent
     if (lights && lights.rim) {
-        const [ar, ag, ab] = getSectionColor(state.scroll, 'accent');
         lights.rim.color.setRGB(ar, ag, ab);
     }
+    // Fill light subtly shifts too
+    if (lights && lights.fill) {
+        lights.fill.color.lerp(new THREE.Color(ar * 0.3, ag * 0.3, ab * 0.5 + 0.3), 0.02);
+    }
 
-    // Slowly drift the fog density based on section for flowing dark atmosphere
+    // Fog color shifts with section (dark tinted)
     if (scene && scene.fog) {
         const targetDensity = 0.015 + Math.sin(state.time * 0.1) * 0.005;
         scene.fog.density += (targetDensity - scene.fog.density) * 0.02;
+        scene.fog.color.lerp(new THREE.Color(ar * 0.06, ag * 0.06, ab * 0.08 + 0.02), 0.01);
+    }
+
+    // Cursor glow tints with accent
+    if (cursorGlow) {
+        cursorGlow.style.background = `radial-gradient(circle, rgba(${Math.round(ar*255)}, ${Math.round(ag*255)}, ${Math.round(ab*255)}, 0.08) 0%, transparent 65%)`;
     }
 
     // Animate glow orbs to float slowly (flowing nebula feel)
     if (scene) {
         scene.children.forEach((child, i) => {
             if (child.isMesh && child.material && child.material.transparent && child.geometry?.type === 'SphereGeometry') {
-                const baseY = child.position.y;
                 child.position.y += Math.sin(state.time * 0.15 + i * 1.7) * dt * 0.08;
                 child.position.x += Math.cos(state.time * 0.1 + i * 2.3) * dt * 0.05;
                 // Pulse opacity
