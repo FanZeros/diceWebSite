@@ -122,13 +122,20 @@ function updateSectionRotation() {
 
     panels.forEach(panel => {
         const idx = parseInt(panel.dataset.sectionIdx);
-        // Distance from the "focused" section
         const dist = scrollPos - idx;
-        // DNA helix: all panels rotate in the same direction, slow and continuous
-        // Rotation accumulates with scroll — like riding along a DNA strand
-        const rotY = dist * 70;
-        // Opacity: fully visible near focus, fades when far
-        const opacity = Math.max(0, 1 - Math.abs(dist) * 0.6);
+
+        // Dead zone: panel stays at 0° (facing you) for a range around its focus
+        const deadZone = 0.35; // stay centered for ±35% of section scroll
+        const absDist = Math.abs(dist);
+        const effectiveDist = absDist > deadZone
+            ? Math.sign(dist) * (absDist - deadZone)
+            : 0;
+
+        const rotY = effectiveDist * 70;
+        // Opacity: full within dead zone, fades when rotating away
+        const opacity = absDist < deadZone
+            ? 1
+            : Math.max(0, 1 - (absDist - deadZone) * 0.9);
 
         panel.style.transform = `rotateY(${rotY}deg)`;
         panel.style.opacity = opacity;
