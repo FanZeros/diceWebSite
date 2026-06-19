@@ -35,32 +35,10 @@ export function initScrollAnimations(container, state) {
         // Skip hero section (has its own char-level animation)
         if (section.classList.contains('section-hero')) return;
 
-        // Carousel: text panel orbits around Y-axis (pivot behind the panel)
-        // Like a revolving door — panel is parallel to Y-axis, rotates around it at a distance
-        const direction = sectionIndex % 2 === 0 ? 1 : -1;
-        const startRotation = direction * 70;
-        const orbitRadius = 500;
-
-        gsap.fromTo(content,
-            {
-                rotateY: startRotation,
-                opacity: 0,
-                transformOrigin: `50% 50% -${orbitRadius}px`,
-            },
-            {
-                rotateY: 0,
-                opacity: 1,
-                transformOrigin: `50% 50% -${orbitRadius}px`,
-                duration: 1.4,
-                ease: 'power2.out',
-                scrollTrigger: {
-                    trigger: section,
-                    scroller: container,
-                    start: 'top 80%',
-                    toggleActions: 'play none none reverse',
-                },
-            }
-        );
+        // Store reference for continuous scroll-driven rotation in main loop
+        content.dataset.sectionIdx = sectionIndex;
+        content.style.transformOrigin = '50% 50% -500px';
+        content.style.willChange = 'transform, opacity';
 
         // Feature cards staggered reveal
         if (cards.length > 0) {

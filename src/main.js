@@ -112,6 +112,29 @@ function updateCardParallax() {
     });
 }
 
+// ===== Continuous scroll-driven section rotation =====
+// Each section panel is on a cylinder — rotation = distance from current scroll focus
+const sectionPanels = document.querySelectorAll('.section-content[data-section-idx]');
+
+function updateSectionRotation() {
+    const scrollPos = state.scroll * 5; // 0-5 across all sections
+    const panels = document.querySelectorAll('[data-section-idx]');
+
+    panels.forEach(panel => {
+        const idx = parseInt(panel.dataset.sectionIdx);
+        // Distance from the "focused" section (0 = facing you, ±1 = rotated away)
+        const dist = scrollPos - idx;
+        // Map distance to rotation: at focus (dist=0) → 0°, further away → rotated
+        const direction = idx % 2 === 0 ? 1 : -1;
+        const rotY = dist * -45 * direction;
+        // Opacity: fully visible near focus, fades when far
+        const opacity = Math.max(0, 1 - Math.abs(dist) * 0.7);
+
+        panel.style.transform = `rotateY(${rotY}deg)`;
+        panel.style.opacity = opacity;
+    });
+}
+
 // ===== Mouse tracking =====
 window.addEventListener('mousemove', (e) => {
     state.mouseTarget.x = (e.clientX / state.width - 0.5) * 2;
@@ -279,6 +302,9 @@ function animate() {
 
     // Update feature card parallax
     updateCardParallax();
+
+    // Continuous scroll-driven Y-axis rotation for section panels
+    updateSectionRotation();
 
     // Render
     composer.render(dt);
