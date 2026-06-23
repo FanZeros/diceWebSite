@@ -74,12 +74,12 @@ export function initPostProcessing(renderer, scene, camera, state) {
     const renderPass = new RenderPass(scene, camera);
     composer.addPass(renderPass);
 
-    // Bloom (subtle on light background)
+    // Bloom (stronger on dark background for dramatic glow)
     const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(state.width, state.height),
-        0.3,    // strength (reduced for light bg)
-        0.5,    // radius
-        0.9     // threshold (higher = only bright spots bloom)
+        0.6,    // strength
+        0.7,    // radius
+        0.75    // threshold
     );
     composer.addPass(bloomPass);
 
@@ -91,9 +91,14 @@ export function initPostProcessing(renderer, scene, camera, state) {
     const originalRender = composer.render.bind(composer);
     composer.render = function(dt) {
         compositePass.uniforms.uTime.value = state.time;
-        // Increase chromatic aberration slightly when scrolling fast
+        // Scroll speed reactive effects
         const scrollSpeed = Math.abs(state.scrollTarget - state.scroll);
-        compositePass.uniforms.uRGBShift.value = 0.001 + scrollSpeed * 0.01;
+        // Chromatic aberration increases with speed
+        compositePass.uniforms.uRGBShift.value = 0.0012 + scrollSpeed * 0.025;
+        // Vignette pulses slightly with speed
+        compositePass.uniforms.uVignette.value = 0.15 + scrollSpeed * 0.3;
+        // Bloom intensifies with speed
+        bloomPass.strength = 0.6 + scrollSpeed * 2.0;
         originalRender(dt);
     };
 

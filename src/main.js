@@ -153,6 +153,9 @@ function updateSectionRotation() {
             ? `0 0 ${20 + focus * 30}px ${glowColor}, 0 8px 32px rgba(0,0,0,0.4), inset 0 0 ${focus * 15}px rgba(255,107,53,${glowIntensity * 0.2})`
             : '0 8px 32px rgba(0,0,0,0.4)';
         panel.style.borderColor = `rgba(255, 107, 53, ${glowIntensity * 0.5})`;
+
+        // Toggle shimmer class based on focus
+        panel.classList.toggle('in-focus', focus > 0.6);
     });
 }
 
@@ -739,17 +742,24 @@ function updateDice(dt) {
 function updateParticles(dt) {
     if (!particles) return;
 
+    // Scroll speed multiplier — particles rush when scrolling fast
+    const scrollSpeed = Math.abs(state.scrollTarget - state.scroll);
+    const speedMult = 1 + scrollSpeed * 15;
+
     // Layer 1: Dust
     const positions = particles.geometry.attributes.position.array;
     const count = positions.length / 3;
     for (let i = 0; i < count; i++) {
         const i3 = i * 3;
-        positions[i3 + 1] += dt * 0.04 * (0.3 + Math.sin(i * 0.1) * 0.7);
+        positions[i3 + 1] += dt * 0.04 * speedMult * (0.3 + Math.sin(i * 0.1) * 0.7);
         if (positions[i3 + 1] > 4) positions[i3 + 1] = -4;
         positions[i3] += Math.sin(state.time * 0.2 + i * 0.3) * dt * 0.015;
     }
     particles.geometry.attributes.position.needsUpdate = true;
     particles.rotation.y = state.time * 0.012;
+
+    // Stretch particles vertically when scrolling fast (speed lines feel)
+    particles.scale.y = 1 + scrollSpeed * 5;
 
     // Layer 2: Accent particles
     const accent = particles.userData.accent;
