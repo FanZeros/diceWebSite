@@ -136,8 +136,7 @@ function updateSectionRotation() {
         const tiltY = state.mouse.x * 4 * focus;  // subtle horizontal tilt (adds to rotY)
         const translateZ = focus * 20; // pull forward when focused
 
-        // Motion blur: slight blur when rotating fast
-        const blur = Math.min(3, abs * 2);
+        // No blur on text panels — keeps text readable at all times
 
         // Opacity
         const opacity = Math.max(0, 1 - abs * 0.5);
@@ -148,7 +147,6 @@ function updateSectionRotation() {
 
         panel.style.transform = `rotateY(${rotY + tiltY}deg) rotateX(${tiltX}deg) translateZ(${translateZ}px)`;
         panel.style.opacity = opacity;
-        panel.style.filter = blur > 0.3 ? `blur(${blur}px)` : 'none';
         panel.style.boxShadow = glowIntensity > 0.05
             ? `0 0 ${20 + focus * 30}px ${glowColor}, 0 8px 32px rgba(0,0,0,0.4), inset 0 0 ${focus * 15}px rgba(255,107,53,${glowIntensity * 0.2})`
             : '0 8px 32px rgba(0,0,0,0.4)';
