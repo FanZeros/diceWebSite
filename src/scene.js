@@ -166,33 +166,33 @@ function createGradientBackground() {
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, size, size);
 
-    // Warm nebula: top-right (deep orange/amber glow)
+    // Warm nebula: top-right (orange/amber glow) — brighter
     const orb1 = ctx.createRadialGradient(size * 0.75, size * 0.2, 0, size * 0.75, size * 0.2, size * 0.45);
-    orb1.addColorStop(0, 'rgba(255, 100, 40, 0.12)');
-    orb1.addColorStop(0.5, 'rgba(180, 50, 20, 0.06)');
+    orb1.addColorStop(0, 'rgba(255, 120, 50, 0.18)');
+    orb1.addColorStop(0.5, 'rgba(200, 60, 20, 0.09)');
     orb1.addColorStop(1, 'transparent');
     ctx.fillStyle = orb1;
     ctx.fillRect(0, 0, size, size);
 
-    // Cool nebula: center-left (deep blue/indigo)
+    // Cool nebula: center-left (blue/indigo) — brighter
     const orb2 = ctx.createRadialGradient(size * 0.15, size * 0.55, 0, size * 0.15, size * 0.55, size * 0.4);
-    orb2.addColorStop(0, 'rgba(60, 60, 200, 0.1)');
-    orb2.addColorStop(0.5, 'rgba(30, 20, 120, 0.05)');
+    orb2.addColorStop(0, 'rgba(80, 80, 240, 0.15)');
+    orb2.addColorStop(0.5, 'rgba(40, 30, 150, 0.07)');
     orb2.addColorStop(1, 'transparent');
     ctx.fillStyle = orb2;
     ctx.fillRect(0, 0, size, size);
 
-    // Purple nebula: bottom-center
+    // Purple nebula: bottom-center — brighter
     const orb3 = ctx.createRadialGradient(size * 0.5, size * 0.85, 0, size * 0.5, size * 0.85, size * 0.35);
-    orb3.addColorStop(0, 'rgba(120, 40, 180, 0.08)');
-    orb3.addColorStop(0.6, 'rgba(80, 20, 140, 0.04)');
+    orb3.addColorStop(0, 'rgba(150, 50, 220, 0.12)');
+    orb3.addColorStop(0.6, 'rgba(100, 30, 160, 0.06)');
     orb3.addColorStop(1, 'transparent');
     ctx.fillStyle = orb3;
     ctx.fillRect(0, 0, size, size);
 
-    // Teal accent: top-left
+    // Teal accent: top-left — brighter
     const orb4 = ctx.createRadialGradient(size * 0.1, size * 0.15, 0, size * 0.1, size * 0.15, size * 0.3);
-    orb4.addColorStop(0, 'rgba(40, 180, 180, 0.06)');
+    orb4.addColorStop(0, 'rgba(50, 200, 200, 0.1)');
     orb4.addColorStop(1, 'transparent');
     ctx.fillStyle = orb4;
     ctx.fillRect(0, 0, size, size);
@@ -235,46 +235,72 @@ function createEnvMap() {
 }
 
 function createParticles(scene) {
-    const dustCount = 350;
-    const dustPositions = new Float32Array(dustCount * 3);
-    for (let i = 0; i < dustCount; i++) {
-        dustPositions[i * 3] = (Math.random() - 0.5) * 14;
-        dustPositions[i * 3 + 1] = (Math.random() - 0.5) * 9;
-        dustPositions[i * 3 + 2] = (Math.random() - 0.5) * 8 - 1;
+    // Layer 1: Dense star field (small bright dots)
+    const starCount = 600;
+    const starPositions = new Float32Array(starCount * 3);
+    const starSizes = new Float32Array(starCount);
+    for (let i = 0; i < starCount; i++) {
+        starPositions[i * 3] = (Math.random() - 0.5) * 18;
+        starPositions[i * 3 + 1] = (Math.random() - 0.5) * 12;
+        starPositions[i * 3 + 2] = (Math.random() - 0.5) * 10 - 2;
+        starSizes[i] = 0.015 + Math.random() * 0.025; // varied sizes
     }
-    const dustGeom = new THREE.BufferGeometry();
-    dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-    const dustMat = new THREE.PointsMaterial({
-        color: 0x8888cc,
-        size: 0.018,
+    const starGeom = new THREE.BufferGeometry();
+    starGeom.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeom.setAttribute('aSize', new THREE.BufferAttribute(starSizes, 1));
+    const starMat = new THREE.PointsMaterial({
+        color: 0xddeeff,
+        size: 0.03,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.8,
         sizeAttenuation: true,
     });
-    const dust = new THREE.Points(dustGeom, dustMat);
-    scene.add(dust);
+    const stars = new THREE.Points(starGeom, starMat);
+    scene.add(stars);
 
-    const accentCount = 80;
+    // Layer 2: Bright accent stars (warm colored, larger)
+    const accentCount = 120;
     const accentPositions = new Float32Array(accentCount * 3);
     for (let i = 0; i < accentCount; i++) {
-        accentPositions[i * 3] = (Math.random() - 0.5) * 16;
-        accentPositions[i * 3 + 1] = (Math.random() - 0.5) * 12;
-        accentPositions[i * 3 + 2] = (Math.random() - 0.5) * 6 - 3;
+        accentPositions[i * 3] = (Math.random() - 0.5) * 20;
+        accentPositions[i * 3 + 1] = (Math.random() - 0.5) * 14;
+        accentPositions[i * 3 + 2] = (Math.random() - 0.5) * 8 - 3;
     }
     const accentGeom = new THREE.BufferGeometry();
     accentGeom.setAttribute('position', new THREE.BufferAttribute(accentPositions, 3));
     const accentMat = new THREE.PointsMaterial({
         color: 0xff6b35,
-        size: 0.04,
+        size: 0.055,
         transparent: true,
-        opacity: 0.5,
+        opacity: 0.7,
         sizeAttenuation: true,
     });
     const accent = new THREE.Points(accentGeom, accentMat);
     scene.add(accent);
 
-    dust.userData.accent = accent;
-    return dust;
+    // Layer 3: Sparse bright "star burst" particles (very bright, few)
+    const burstCount = 30;
+    const burstPositions = new Float32Array(burstCount * 3);
+    for (let i = 0; i < burstCount; i++) {
+        burstPositions[i * 3] = (Math.random() - 0.5) * 16;
+        burstPositions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+        burstPositions[i * 3 + 2] = (Math.random() - 0.5) * 6 - 2;
+    }
+    const burstGeom = new THREE.BufferGeometry();
+    burstGeom.setAttribute('position', new THREE.BufferAttribute(burstPositions, 3));
+    const burstMat = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.07,
+        transparent: true,
+        opacity: 0.9,
+        sizeAttenuation: true,
+    });
+    const burst = new THREE.Points(burstGeom, burstMat);
+    scene.add(burst);
+
+    stars.userData.accent = accent;
+    stars.userData.burst = burst;
+    return stars;
 }
 
 function createGlowOrbs(scene) {

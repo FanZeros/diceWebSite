@@ -740,42 +740,54 @@ function updateDice(dt) {
 function updateParticles(dt) {
     if (!particles) return;
 
-    // Scroll speed multiplier — particles rush when scrolling fast
+    // Scroll speed multiplier
     const scrollSpeed = Math.abs(state.scrollTarget - state.scroll);
-    const speedMult = 1 + scrollSpeed * 15;
+    const speedMult = 1 + scrollSpeed * 12;
 
-    // Layer 1: Dust
+    // Layer 1: Star field — gentle drift + twinkle
     const positions = particles.geometry.attributes.position.array;
     const count = positions.length / 3;
     for (let i = 0; i < count; i++) {
         const i3 = i * 3;
-        positions[i3 + 1] += dt * 0.04 * speedMult * (0.3 + Math.sin(i * 0.1) * 0.7);
-        if (positions[i3 + 1] > 4) positions[i3 + 1] = -4;
-        positions[i3] += Math.sin(state.time * 0.2 + i * 0.3) * dt * 0.015;
+        positions[i3 + 1] += dt * 0.02 * speedMult * (0.3 + Math.sin(i * 0.1) * 0.7);
+        if (positions[i3 + 1] > 6) positions[i3 + 1] = -6;
+        positions[i3] += Math.sin(state.time * 0.15 + i * 0.3) * dt * 0.01;
     }
     particles.geometry.attributes.position.needsUpdate = true;
-    particles.rotation.y = state.time * 0.012;
+    particles.rotation.y = state.time * 0.008;
+    // Twinkle: oscillate opacity
+    particles.material.opacity = 0.7 + Math.sin(state.time * 1.5) * 0.15;
+    // Stretch when scrolling fast
+    particles.scale.y = 1 + scrollSpeed * 4;
 
-    // Stretch particles vertically when scrolling fast (speed lines feel)
-    particles.scale.y = 1 + scrollSpeed * 5;
-
-    // Layer 2: Accent particles
+    // Layer 2: Accent stars
     const accent = particles.userData.accent;
     if (accent) {
         const ap = accent.geometry.attributes.position.array;
         const ac = ap.length / 3;
         for (let i = 0; i < ac; i++) {
             const i3 = i * 3;
-            ap[i3 + 1] += dt * 0.06 * (0.4 + Math.cos(i * 0.2) * 0.6);
-            if (ap[i3 + 1] > 6) ap[i3 + 1] = -6;
-            ap[i3] += Math.cos(state.time * 0.15 + i * 0.7) * dt * 0.025;
+            ap[i3 + 1] += dt * 0.03 * speedMult * (0.4 + Math.cos(i * 0.2) * 0.6);
+            if (ap[i3 + 1] > 7) ap[i3 + 1] = -7;
+            ap[i3] += Math.cos(state.time * 0.12 + i * 0.7) * dt * 0.02;
         }
         accent.geometry.attributes.position.needsUpdate = true;
-        accent.rotation.y = -state.time * 0.008;
+        accent.rotation.y = -state.time * 0.006;
 
-        // Accent particle color follows section theme
+        // Accent color follows section theme
         const [ar, ag, ab] = getSectionColor(state.scroll, 'accent');
         accent.material.color.setRGB(ar, ag, ab);
+        accent.material.opacity = 0.6 + Math.sin(state.time * 0.8) * 0.15;
+    }
+
+    // Layer 3: Burst stars — twinkle individually (simulate with global pulse)
+    const burst = particles.userData.burst;
+    if (burst) {
+        burst.rotation.y = state.time * 0.004;
+        burst.rotation.x = Math.sin(state.time * 0.05) * 0.02;
+        // Strong twinkle
+        burst.material.opacity = 0.5 + Math.sin(state.time * 2.5) * 0.4;
+        burst.material.size = 0.06 + Math.sin(state.time * 1.8) * 0.02;
     }
 }
 
